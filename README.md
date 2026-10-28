@@ -9,7 +9,7 @@
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sadak--sense.vercel.app-F97316?style=for-the-badge)](https://sadaksense.netlify.app)
 [![Theme](https://img.shields.io/badge/Hackathon_Theme-07_Greener_Cities,_Better_Living-16A34A?style=for-the-badge)](#-why-this-exists)
 
-**👉 [Try it now: sadak-sense.vercel.app](https://sadak-sense.vercel.app) 👈**
+**👉 [Try it now: sadak-sense.vercel.app](https://sadaksense.netlify.app) 👈**
 
 > ⭐ **Short on time? Open [`guide.html`](./guide.html) first.** It's the map of the entire project: every page, one click away, plus a 4-stop demo route that shows the whole idea in about 3 minutes.
 
