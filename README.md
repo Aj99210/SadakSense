@@ -6,7 +6,7 @@
 
 **An end-to-end pipeline that turns a single pothole photo into a greener, faster, better-run city.**
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sadak--sense.vercel.app-F97316?style=for-the-badge)](https://sadaksense.netlify.app)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sadaksense.netlify.app-F97316?style=for-the-badge)](https://sadaksense.netlify.app)
 [![Theme](https://img.shields.io/badge/Hackathon_Theme-07_Greener_Cities,_Better_Living-16A34A?style=for-the-badge)](#-why-this-exists)
 
 **👉 [Try it now: sadaksense.netlify.app](https://sadaksense.netlify.app) 👈**
