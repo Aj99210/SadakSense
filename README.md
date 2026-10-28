@@ -9,7 +9,7 @@
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sadak--sense.vercel.app-F97316?style=for-the-badge)](https://sadaksense.netlify.app)
 [![Theme](https://img.shields.io/badge/Hackathon_Theme-07_Greener_Cities,_Better_Living-16A34A?style=for-the-badge)](#-why-this-exists)
 
-**👉 [Try it now: sadak-sense.vercel.app](https://sadaksense.netlify.app) 👈**
+**👉 [Try it now: sadaksense.netlify.app](https://sadaksense.netlify.app) 👈**
 
 > ⭐ **Short on time? Open [`guide.html`](./guide.html) first.** It's the map of the entire project: every page, one click away, plus a 4-stop demo route that shows the whole idea in about 3 minutes.
 
@@ -130,7 +130,7 @@ A repair counts only when the road **improves by at least 2.5 RQI points and rea
 | **Vision / ML** | YOLO26 + SAHI sliced inference (cracks and potholes), SAM 3 (road segmentation), Depth Anything 3 (3D), LightGBM + SHAP (RQI and forecasting) |
 | **Optimisation** | OR-Tools (repair planning), H3 / OSMnx (geo) |
 | **Language model** | Qwen3-VL-8B (grounded complaint drafting) |
-| **Hosting** | Vercel (frontend) |
+| **Hosting** | Netlify (frontend) |
 
 ---
 
@@ -192,7 +192,7 @@ Run the tests: `pytest tests/`
 
 ## 🙌 Try it · Tour it · Share it
 
-- 🚀 **Try it:** [sadak-sense.vercel.app](https://sadaksense.netlify.app)
+- 🚀 **Try it:** [sadaksense.netlify.app](https://sadaksense.netlify.app)
 - 🧭 **Tour it:** open [`guide.html`](./guide.html)
 - ⭐ **Like it?** Star the repo. It helps more than you think.
 
