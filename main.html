@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SadakSense | Data Processing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F97316'/%3E%3Cpath d='M5.5 28 12.8 5.5h6.4L26.5 28z' fill='%2309090B'/%3E%3Cpath d='M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z' fill='%23F97316'/%3E%3C/svg%3E">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Hanken+Grotesk:wght@300..800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400..700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>if(typeof tailwind!=='undefined'){tailwind.config={corePlugins:{preflight:false},theme:{extend:{colors:{ink:'#09090B',paper:'#F4F4F5',brand:'#EA580C',orange:'#F97316',cyan:'#06B6D4'},fontFamily:{display:['Bricolage Grotesque','Arial Narrow','sans-serif'],sans:['Hanken Grotesk','system-ui','sans-serif'],serif:['Instrument Serif','Georgia','serif'],mono:['Geist Mono','JetBrains Mono','ui-monospace','monospace']}}}}}</script>
+<style>
+:root{--ink:#09090B;--ink-2:#18181B;--paper:#F4F4F5;--paper-2:#FAFAFA;--line:#E4E4E7;--mut-l:#52525B;--mut-d:#A1A1AA;--orange:#F97316;--brand:#EA580C;--deep:#C2410C;--wash:#FFF7ED;--cyan:#06B6D4;--good:#10B981;--mod:#EAB308;--crit:#EF4444;
+--f-disp:"Bricolage Grotesque","Arial Narrow",sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-acc:"Instrument Serif",Georgia,serif;--f-mono:"Geist Mono","JetBrains Mono",ui-monospace,monospace;
+--fs-title:clamp(2.8rem,1.4rem + 6vw,6.5rem);--fs-lead:clamp(1.075rem,1rem + .45vw,1.35rem);--pad:clamp(1.25rem,4vw,3rem);
+--sh1:0 1px 1px rgb(9 9 11/.06),0 2px 4px rgb(9 9 11/.05),0 10px 20px -10px rgb(9 9 11/.14);--sh-or:0 8px 24px -8px rgb(249 115 22/.55);
+--ease:cubic-bezier(.16,1,.3,1);--ease-io:cubic-bezier(.65,0,.35,1)}
+#results-section{--tone:#EAB308;--tw:#FEFCE8;--td:#854D0E}
+#results-section[data-tone=good]{--tone:#10B981;--tw:#ECFDF5;--td:#047857}
+#results-section[data-tone=moderate]{--tone:#EAB308;--tw:#FEFCE8;--td:#854D0E}
+#results-section[data-tone=critical]{--tone:#EF4444;--tw:#FEF2F2;--td:#B91C1C}
+*{box-sizing:border-box;margin:0}
+html{overflow-x:clip;-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto!important}
+html.modal-open{overflow:hidden}
+body{font:400 1.0625rem/1.6 var(--f-body);background:var(--paper);color:var(--ink);overflow-x:clip;text-wrap:pretty;-webkit-font-smoothing:antialiased}
+body::after{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+img,video{max-width:100%;display:block}button,a{color:inherit}button{font:inherit;cursor:pointer;background:none;border:0;user-select:none}a{text-decoration:none}
+h1,h2{font-family:var(--f-disp);text-wrap:balance}h3{font:600 1rem/1.3 var(--f-body);text-wrap:balance}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.hidden{display:none!important}
+.lbl{font:500 .72rem/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.12em}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.acc{font-family:var(--f-acc);font-style:italic;font-weight:400;color:var(--brand);letter-spacing:0}
+.line{display:block;overflow:clip;padding-bottom:.14em;margin-bottom:-.14em}.line>span{display:block}
+.ul{background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;transition:background-size .35s var(--ease)}a:hover .ul{background-size:100% 1.5px}
+.skip{position:fixed;left:12px;top:-80px;z-index:10000;background:var(--ink);color:#fff;padding:.7rem 1rem;border-radius:8px}.skip:focus{top:12px}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px;transition:outline-offset .15s}:focus-visible:active{outline-offset:1px}
+[tabindex="-1"]:focus{outline:0}
+.is-paused,.is-paused *,.is-paused::before,.tab-hidden *{animation-play-state:paused!important}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.75rem 1.4rem;border-radius:999px;font-weight:600;font-size:1rem;transition:background .3s,color .3s,box-shadow .3s,scale .15s,opacity .3s}
+.btn:active{scale:.96}.btn svg{width:18px;height:18px;flex:none}.btn .go{transition:transform .3s var(--ease)}.btn:hover .go{transform:translate(3px,-3px)}
+.bp{background:var(--orange);color:var(--ink)}.bp:hover{background:var(--brand);box-shadow:var(--sh-or)}
+.bs{border:1.5px solid var(--ink)}.bs:hover{background:var(--ink);color:var(--paper)}
+.ond .bs,.bs.ond{border-color:#fff;color:#fff}.bs.ond:hover{background:#fff;color:var(--ink)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.sp{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(1turn)}}
+.ib{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;flex:none}.ib:hover{background:var(--paper-2)}.ib:active{scale:.94}.ib svg{width:20px;height:20px;stroke-width:1.75}
+/* header */
+#hdr{position:fixed;inset:0 0 auto;height:64px;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0 var(--pad);background:rgb(244 244 245/.8);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:.55rem;font:700 1.25rem var(--f-disp);letter-spacing:-.03em;min-height:44px}.logo svg{width:34px;height:34px;flex:none}
+.logo em{font:italic 400 1.22em var(--f-acc);color:var(--brand);letter-spacing:0}
+.hr{display:flex;align-items:center;gap:.6rem}
+.chip{position:relative;display:inline-flex;align-items:center;gap:.5rem;font:500 .72rem/1 var(--f-mono);text-transform:uppercase;letter-spacing:.1em;padding:.6rem .8rem;border:1px solid var(--ink);border-radius:999px;white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--orange)}
+[data-mode=live] .chip i{background:var(--cyan);animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.35}}
+.tip{position:absolute;top:calc(100% + 8px);right:0;z-index:5;width:min(280px,80vw);padding:.7rem .9rem;border-radius:14px;background:var(--ink);color:var(--paper);font:400 .8125rem/1.45 var(--f-body);text-transform:none;letter-spacing:0;white-space:normal;opacity:0;visibility:hidden;transition:opacity .2s}
+.chip:hover .tip,.chip:focus .tip{opacity:1;visibility:visible}
+#viz-btn,#pay-btn{min-height:44px;padding:.5rem 1.1rem}
+@media(max-width:639px){.vl{display:none}#viz-btn,#pay-btn{width:44px;padding:0}.chip{padding:.5rem .6rem}}
+.banner{position:fixed;top:72px;left:50%;translate:-50% 0;z-index:40;display:flex;align-items:center;gap:.5rem;max-width:min(560px,calc(100% - 24px));padding:.4rem .5rem .4rem 1rem;border-radius:999px;background:var(--paper-2);border:1px solid var(--line);box-shadow:var(--sh1);font-size:.9375rem}
+/* views */
+main{display:grid;min-height:100vh;min-height:100svh}.v{grid-area:1/1;align-self:start;width:100%;min-width:0;min-height:100vh;min-height:100svh}
+/* idle */
+#upload-section{padding:calc(64px + clamp(2rem,6vw,5rem)) var(--pad) 4rem;background:var(--paper) radial-gradient(rgb(9 9 11/.09) 1px,transparent 1px) 0 0/22px 22px}
+.in{max-width:1100px;margin:0 auto}
+.ttl{font-size:var(--fs-title);font-weight:800;line-height:.95;letter-spacing:-.01em;font-stretch:84%;font-variation-settings:"opsz" 72,"wdth" 84}
+.ttl .acc{font-size:1.04em}
+.lead{font-size:var(--fs-lead);color:var(--mut-l);max-width:56ch;margin:1.5rem 0 2.5rem}
+.dz{--o:20px;position:relative;isolation:isolate;overflow:clip;min-height:380px;min-height:clamp(380px,48svh,480px);border-radius:32px;background:var(--paper-2);box-shadow:var(--sh1),inset 0 1px 0 #fff;display:grid;place-items:center;text-align:center;padding:3.75rem 2rem;cursor:pointer;transition:scale .3s var(--ease)}
+.dz:focus-visible{outline-offset:4px}.dz:active{scale:.99}
+.dz::before{content:"";position:absolute;inset:30px;border-radius:6px;opacity:.55;transition:opacity .3s;pointer-events:none;background:linear-gradient(90deg,var(--orange) 50%,transparent 0) top/16px 2px repeat-x,linear-gradient(90deg,var(--orange) 50%,transparent 0) bottom/16px 2px repeat-x,linear-gradient(0deg,var(--orange) 50%,transparent 0) left/2px 16px repeat-y,linear-gradient(0deg,var(--orange) 50%,transparent 0) right/2px 16px repeat-y;animation:ants 8s linear infinite}
+@keyframes ants{to{background-position:128px 0,-128px 100%,0 -128px,100% 128px}}
+.dz:hover::before{opacity:1}.dz.over{scale:1.01;--k:-6}.dz:hover{--k:8}
+.dz.over::before,.dz.bad::before{background:none;border:2px solid var(--orange);animation:none;opacity:1}.dz.bad::before{border-color:var(--crit)}
+.dz .c{position:relative;z-index:4;display:grid;justify-items:center;gap:.4rem;max-width:100%}
+.tile{display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:var(--wash);color:var(--deep);margin-bottom:.6rem;transition:translate .4s var(--ease)}.dz:hover .tile{translate:0 -4px}.tile svg{width:32px;height:32px;stroke-width:1.6}
+.dzt{font:700 clamp(1.4rem,1rem + 1.5vw,1.9rem)/1.1 var(--f-body);letter-spacing:-.01em}.dzs{color:var(--mut-l)}.dzh{color:var(--mut-l);margin-top:.5rem}.hm{display:none}
+@media(max-width:640px){.hd{display:none}.hm{display:inline}.dz{padding:3.25rem 1.25rem;border-radius:22px}.dz::before{inset:26px}}
+.br{position:absolute;z-index:4;width:26px;height:26px;border:2.5px solid var(--orange);pointer-events:none;translate:calc(var(--dx)*var(--k,0)) calc(var(--dy)*var(--k,0));transition:translate .3s var(--ease);animation:brth 3s var(--ease-io) infinite alternate}
+@keyframes brth{to{scale:1.02}}
+.br.t{top:var(--o)}.br.b{bottom:var(--o)}.br.l{left:var(--o)}.br.r{right:var(--o)}
+.br.t.l{border-right:0;border-bottom:0;border-top-left-radius:6px;--dx:-1px;--dy:-1px}.br.t.r{border-left:0;border-bottom:0;border-top-right-radius:6px;--dx:1px;--dy:-1px}
+.br.b.l{border-right:0;border-top:0;border-bottom-left-radius:6px;--dx:-1px;--dy:1px}.br.b.r{border-left:0;border-top:0;border-bottom-right-radius:6px;--dx:1px;--dy:1px}
+@media(max-width:640px){.br{width:16px;height:16px}}
+.ls{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;background:linear-gradient(transparent calc(100% - 90px),rgb(6 182 212/.14));border-bottom:2px solid rgb(6 182 212/.5);animation:lp 6s var(--ease-io) infinite}
+@keyframes lp{0%{transform:translateY(-100%);opacity:.7}23%{transform:none;opacity:.7}24%,100%{transform:none;opacity:0}}
+.lane{position:absolute;left:-28px;right:0;bottom:0;height:3px;z-index:1;pointer-events:none;opacity:.7;background:repeating-linear-gradient(90deg,var(--orange) 0 14px,transparent 14px 28px);animation:lane 2.4s linear infinite}@keyframes lane{to{transform:translateX(28px)}}
+.dz-error{min-height:1.6rem;margin-top:.75rem;color:#B91C1C;font-weight:500;overflow-wrap:anywhere}
+.fmt{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}.fmt span{font:500 .72rem/1 var(--f-mono);letter-spacing:.1em;padding:.5rem .8rem;border:1px solid var(--line);border-radius:999px;background:#fff}
+/* analyzing: the scan bay */
+#processing-section{background:var(--ink);color:#fff;padding:calc(64px + 1.5rem) var(--pad) 3rem}
+.scan{max-width:1320px;margin:0 auto;display:grid;gap:24px}@media(min-width:1024px){.scan{grid-template-columns:7fr 5fr;align-items:start}}
+.bay{--o:14px;position:relative;isolation:isolate;overflow:clip;border-radius:22px;width:100%;aspect-ratio:16/10;max-height:62vh;max-height:62svh;background:var(--ink-2)}
+.bm{position:absolute;inset:0;z-index:0}.bm img,.bm video,.rm img,.rm video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.bi{position:absolute;inset:0;z-index:0;display:grid;place-items:center;color:var(--mut-d)}.bi svg{width:56px;height:56px}
+.bt{position:absolute;inset:0;z-index:1;background:rgb(9 9 11/.18);pointer-events:none}
+.bg{position:absolute;inset:0;z-index:2;pointer-events:none;background-image:linear-gradient(rgb(255 255 255/.06) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255/.06) 1px,transparent 1px);background-size:calc(100%/12) calc(100%/8)}
+.bret{position:absolute;inset:0;z-index:2;pointer-events:none}
+.ret{position:absolute;border:2px solid var(--orange);border-radius:4px}.ret span{position:absolute;left:-2px;top:-24px;white-space:nowrap;background:var(--ink);color:#fff;font:500 .6875rem/1 var(--f-mono);padding:5px 7px;border-radius:6px}
+.lz{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(to bottom,transparent calc(100% - 90px),rgb(6 182 212/.22));border-bottom:3px solid var(--cyan);box-shadow:0 10px 28px 2px rgb(6 182 212/.35);animation:laser 2.6s var(--ease-io) infinite alternate;will-change:transform}
+@keyframes laser{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.lz.one{animation:none;opacity:0;will-change:auto}.lz.one.run{animation:pass 1.4s var(--ease-io) 1 forwards}
+@keyframes pass{0%{transform:translateY(-100%);opacity:1}85%{transform:none;opacity:1}100%{transform:none;opacity:0}}
+.bc{position:absolute;z-index:4;top:14px;left:14px;max-width:calc(100% - 28px);background:var(--ink);color:#fff;font:500 .72rem/1 var(--f-mono);padding:8px 10px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc.cr{left:auto;right:14px}.bc.cb{top:auto;bottom:14px}.bc:empty{display:none}
+.stage{display:grid;gap:.9rem;align-content:start}.stage p{color:var(--mut-d)}.stage .lbl{color:var(--orange)}
+.stage h2{font-size:clamp(1.9rem,1.2rem + 2.4vw,3rem);font-weight:800;line-height:1;letter-spacing:-.02em;color:#fff}
+.steps{list-style:none;padding:0;display:grid;gap:.9rem;margin:.6rem 0}
+.steps li{position:relative;display:flex;align-items:center;gap:.8rem;color:var(--mut-d)}
+.steps li::before{content:"";width:20px;height:20px;border-radius:50%;border:2px solid var(--mut-d);flex:none}
+.steps li.is-active{color:#fff}.steps li.is-active::before{border-color:var(--orange);animation:ring 1.4s infinite}
+.steps li.is-done::before{background:var(--orange);border-color:var(--orange)}
+.steps li.is-done::after{content:"";position:absolute;left:7px;top:50%;width:6px;height:11px;border:solid var(--ink);border-width:0 2px 2px 0;transform:translateY(-62%) rotate(45deg)}
+@keyframes ring{50%{box-shadow:0 0 0 6px rgb(249 115 22/.25)}}
+.track{height:6px;border-radius:3px;background:var(--ink-2);overflow:clip}.track.l{background:var(--line)}
+#progress-bar{height:100%;background:var(--orange);transform-origin:left center;transform:scaleX(0);width:100%}
+.srow{display:flex;justify-content:space-between;gap:1rem}.srow .num{min-width:7ch;text-align:right}
+.perr{display:grid;gap:.75rem;justify-items:start;padding:1rem;border:1px solid var(--crit);border-radius:14px}.perr p{color:#fff}
+/* results */
+#results-section{padding-top:64px;background:var(--paper)}
+.band{position:relative;isolation:isolate;overflow:clip;padding:2.5rem 0}
+.flood{position:absolute;inset:0;z-index:0;background:var(--tw)}
+.wrap{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 var(--pad)}
+.bandg{display:grid;gap:2rem}@media(min-width:1024px){.bandg{grid-template-columns:7fr 5fr;align-items:center}}
+.rc{display:grid;gap:1rem;justify-items:start;min-width:0}
+.res-eyebrow{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;color:var(--td)}
+.ck{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:20;stroke-dashoffset:0}
+.dlab{padding:.35rem .6rem;border:1px solid currentColor;border-radius:999px}
+.fchip{display:inline-flex;align-items:center;gap:.5rem;max-width:100%;padding:.45rem .8rem;border-radius:999px;background:var(--ink);color:#fff;font:500 .78rem/1 var(--f-mono)}.fchip svg{width:14px;height:14px;color:var(--orange);flex:none}
+#file-name-display{overflow-wrap:anywhere}
+.trow{display:flex;gap:1rem;align-items:flex-start;min-width:0}
+.sic{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--tone);color:var(--ink);flex:none;margin-top:.4rem}.sic svg{width:28px;height:28px}
+.sc{display:block;font:600 clamp(1.1rem,1rem + .5vw,1.35rem)/1.2 var(--f-body);margin-bottom:.3rem}
+.rt{font-family:var(--f-disp);font-size:var(--fs-title);font-weight:800;line-height:.95;letter-spacing:-.02em;font-stretch:84%;font-variation-settings:"opsz" 72,"wdth" 84;color:var(--td);overflow-wrap:anywhere}
+.rec{font-size:var(--fs-lead);max-width:60ch;color:var(--ink)}
+.res-actions{display:flex;flex-wrap:wrap;gap:.75rem}
+.gp{position:relative;padding:1.5rem;border-radius:22px;background:#fff;box-shadow:var(--sh1)}
+#gauge{width:100%;max-width:360px;display:block;margin:0 auto}#gauge text{font:500 11px var(--f-mono);fill:#52525B}
+.gn{display:flex;align-items:baseline;justify-content:center;gap:.4rem}
+#rqi-value{font:800 4.5rem/1 var(--f-disp);font-variant-numeric:tabular-nums;min-width:3.4ch;text-align:right}.gn .num{color:var(--mut-l)}
+.stamp{position:absolute;z-index:4;right:1rem;top:1rem;display:flex;align-items:baseline;gap:.4rem;padding:.4rem .7rem;border:2px dashed var(--tone);border-radius:8px;color:var(--td);background:var(--tw);transform:rotate(-4deg)}
+.stamp b{font-size:1.1rem}
+.bento{display:grid;gap:24px;max-width:1320px;margin:0 auto;padding:2rem var(--pad) 7rem}
+@media(min-width:900px){.bento{grid-template-columns:repeat(12,1fr)}.p-media{grid-column:1/8;grid-row:1/3}.p-speed,.p-cong{grid-column:8/13}.p-tel{grid-column:1/6}.p-radar{grid-column:6/13}.p-donut{grid-column:1/6}.p-line{grid-column:6/13}.p-infra,.p-risk,.p-bar{grid-column:span 4}}
+.pl{position:relative;border-radius:22px;background:var(--paper-2);box-shadow:var(--sh1);min-width:0;transition:translate .3s var(--ease)}
+.pl::before{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 18px 40px -16px rgb(9 9 11/.28);opacity:0;transition:opacity .3s}
+.pl:hover{translate:0 -2px}.pl:hover::before{opacity:1}
+.pi{position:relative;display:flex;flex-direction:column;gap:1rem;height:100%;padding:1.25rem;border-radius:inherit;background:var(--paper-2);contain:layout paint style}
+.pi h3{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.tg{font:500 .6875rem/1 var(--f-mono);text-transform:uppercase;letter-spacing:.1em;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px;color:var(--mut-l)}.tg:empty{display:none}
+[data-mode=live] .demo-only{display:none!important}
+.p-media .pi{padding:8px}.media{position:relative;isolation:isolate;overflow:clip;border-radius:14px;background:var(--ink);min-height:320px;height:100%}.rm{position:absolute;inset:0;z-index:0}
+.sv{display:flex;align-items:baseline;gap:.5rem}.sv b{font:800 3.5rem/1 var(--f-disp);font-variant-numeric:tabular-nums;min-width:2.2ch}
+#speed-bar{height:100%;background:var(--tone);transform-origin:left center;transform:scaleX(0)}
+.tick{display:flex;justify-content:space-between;color:var(--mut-l);font-size:.75rem}
+.cl{font:800 2.4rem/1 var(--f-disp);color:var(--td);overflow-wrap:anywhere}
+.segs{display:flex;gap:6px}.seg{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:clip}.seg i{display:block;height:100%;background:var(--tone);transform:scaleX(0);transform-origin:left center}
+.p-tel .pi{background:var(--ink);color:#fff}.p-tel p{color:var(--mut-d);font-size:.9375rem}.p-tel{background:var(--ink)}
+.dots{display:flex;gap:6px}.dots i{width:9px;height:9px;border-radius:50%;background:var(--crit)}.dots i:nth-child(2){background:var(--mod)}.dots i:nth-child(3){background:var(--good)}
+.term{font:400 .75rem/1.7 var(--f-mono);color:var(--mut-d);min-height:9rem;overflow-wrap:anywhere;user-select:text}.term b{color:var(--cyan);font-weight:500}
+.cb{position:relative;height:260px}.cb.s{height:200px}.cb.sq{height:190px;width:190px;flex:none}.cb canvas{position:absolute;inset:0}
+.note{color:var(--mut-l);font-size:.875rem}
+.dn{display:flex;flex-wrap:wrap;gap:1.25rem;align-items:center}.dc{position:absolute;inset:0;z-index:1;display:grid;place-content:center;text-align:center;pointer-events:none}.dc b{font-size:1.6rem}.dc span{font-size:.8125rem;color:var(--mut-l)}
+.lg{list-style:none;padding:0;display:grid;gap:.5rem;flex:1;min-width:150px}.lg li{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;padding:.2rem 0}.lg i{width:10px;height:10px;border-radius:50%;flex:none}.lg .num{margin-left:auto}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:.3rem .75rem;padding:.7rem 0;border-bottom:1px solid var(--line);align-items:center}.mrow:last-child{border:0}
+.mrow .track{grid-column:1/-1;height:4px}.mrow .track i{display:block;height:100%;background:var(--tone);transform:scaleX(0);transform-origin:left center}
+.tags{display:flex;flex-wrap:wrap;gap:.5rem}.rtag{display:inline-flex;align-items:center;font:500 .8125rem/1.2 var(--f-body);padding:.45rem .75rem;border-radius:999px;background:var(--tw);color:var(--td);border:1px solid var(--tone);transition:translate .2s}.rtag:hover{translate:0 -2px}
+#risk-summary{max-width:60ch;color:var(--mut-l);font-size:.9375rem}
+/* sticky action bar */
+#sbar{position:fixed;inset:auto 0 0;z-index:40;display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--line);transform:translateY(100%);visibility:hidden;transition:transform .4s var(--ease),visibility .4s}
+#sbar.on{transform:none;visibility:visible}
+/* modal */
+#report-modal,#lib-modal{position:fixed;inset:0;z-index:900;display:grid;place-items:center;padding:16px}
+#mbk,#lbk{position:absolute;inset:0;background:rgb(9 9 11/.6)}
+.mp{--tc:var(--orange);position:relative;z-index:910;display:flex;flex-direction:column;width:100%;max-width:720px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);background:var(--paper);border-radius:22px;overflow:clip;box-shadow:0 2px 4px rgb(9 9 11/.1),0 16px 32px -8px rgb(9 9 11/.3),0 48px 80px -24px rgb(9 9 11/.4)}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.25rem 1.5rem;border-bottom:1px solid var(--line)}
+.mh h2{font:700 1.5rem/1.15 var(--f-body)}.mh p{color:var(--mut-l);font-size:.9375rem;margin-top:.25rem}
+.mb{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:1.25rem 1.5rem;display:grid;gap:1.25rem;align-content:start}
+.mf{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem calc(1rem + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--paper)}
+fieldset{border:0;padding:0;min-width:0}legend{display:block;width:100%;padding-bottom:.6rem;margin-bottom:1rem;border-bottom:1px solid var(--line);color:var(--deep)}
+.fg{display:grid;gap:1rem;grid-template-columns:1fr}@media(min-width:640px){.fg{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+.fg>div{min-width:0}label{display:block;font-weight:600;font-size:.9375rem;margin-bottom:.35rem}
+input,select,textarea{width:100%;min-height:48px;padding:.7rem .9rem;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font:inherit;font-size:1rem;transition:border-color .2s,box-shadow .2s}
+textarea{resize:vertical;min-height:96px}input:hover,select:hover,textarea:hover{border-color:var(--mut-l)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgb(249 115 22/.25)}
+[aria-invalid=true]{border-color:var(--crit)!important}[aria-invalid=true]:focus{box-shadow:0 0 0 3px rgb(239 68 68/.25)}
+input:disabled,select:disabled{background:var(--paper);color:var(--mut-l)}
+.fe{color:#B91C1C;font-size:.8125rem;margin-top:.3rem}
+#report-error{padding:.7rem 1rem;border-radius:14px;background:#FEF2F2;color:#B91C1C;font-weight:600;font-size:.9375rem}
+.refrow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.refrow .num{font-size:.8125rem;color:var(--deep);font-weight:600;overflow-wrap:anywhere}
+.paper{background:#fff;border:1px solid var(--line);border-top:4px solid var(--tc);border-radius:8px;padding:clamp(1.1rem,4vw,2rem)}
+#complaint-text{font:400 .9688rem/1.7 var(--f-body);white-space:pre-wrap;overflow-wrap:anywhere;max-width:66ch;user-select:text}
+.where{padding:1rem 1.1rem;border-radius:14px;background:var(--wash);display:grid;gap:.4rem;font-size:.9375rem;overflow-wrap:anywhere}.where a{color:var(--deep);text-decoration:underline}
+.cpy{display:inline-flex;align-items:center;gap:.4rem;min-height:44px;padding:0 .8rem;border:1px solid var(--line);border-radius:999px;font-weight:600;font-size:.875rem;background:#fff}.cpy svg{width:16px;height:16px}
+.is-copied .ic1,.cpy .ic2,.btn .ic2{display:none}.is-copied .ic2{display:inline-block}
+#toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom,0px));z-index:950;translate:-50% 20px;display:flex;align-items:center;gap:.5rem;padding:.3rem .4rem .3rem 1.1rem;border-radius:999px;background:var(--ink);color:var(--paper);opacity:0;visibility:hidden;transition:opacity .3s,translate .3s var(--ease),visibility .3s}
+#toast.on{opacity:1;visibility:visible;translate:-50% 0}#toast .ib:hover{background:var(--ink-2)}
+
+/* polish */
+.tile{position:relative}.tile::after{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--orange);opacity:0;animation:tring 2.8s var(--ease) infinite;pointer-events:none}
+@keyframes tring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.7);opacity:0}}
+.dz{background:radial-gradient(ellipse at 50% 40%,#fff,var(--paper-2) 70%)}
+.dz.over{background:radial-gradient(ellipse at 50% 40%,var(--wash),#FFEDD5 90%)}.dz.over .tile{scale:1.12;background:#fff}
+.dz.bad{background:radial-gradient(ellipse at 50% 40%,#fff,#FEF2F2 90%)}
+.dz .tile{transition:translate .4s var(--ease),scale .3s var(--ease),background .3s}
+body{background:var(--paper)}
+#upload-section{background-color:var(--paper)}
+.dz{transition:scale .3s var(--ease),box-shadow .4s var(--ease)}
+.dz:hover{box-shadow:0 1px 1px rgb(9 9 11/.06),0 18px 40px -18px rgb(249 115 22/.45),inset 0 1px 0 #fff}
+.dz:hover::before{opacity:1}
+.fmt{justify-content:center}.fmt span{transition:translate .2s,border-color .2s}.fmt span:hover{translate:0 -2px;border-color:var(--orange)}
+.btn{box-shadow:0 1px 0 rgb(255 255 255/.4) inset}.bp{box-shadow:0 6px 18px -8px rgb(249 115 22/.6)}
+.band{border-bottom:1px solid var(--line)}
+.gp{border:1px solid var(--line);box-shadow:var(--sh1),0 24px 48px -28px rgb(9 9 11/.25)}
+.pl{border:1px solid rgb(9 9 11/.06)}
+.pi h3{font-size:1.0625rem;letter-spacing:-.005em}
+.pi>h3::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--tone,var(--orange));flex:none}
+#processing-section{background:radial-gradient(circle at 80% 0,rgb(6 182 212/.08),transparent 45%),var(--ink)}
+.bay{box-shadow:0 0 0 1px rgb(255 255 255/.08),0 30px 60px -30px rgb(0 0 0/.8)}
+.steps li{transition:color .3s}
+.sic{box-shadow:0 8px 20px -8px var(--tone)}
+.mp{border:1px solid rgb(9 9 11/.08)}
+.rtag{font-weight:600}
+/* dropzone: library option */
+.dzo{display:flex;align-items:center;gap:.8rem;width:min(250px,100%);margin:.9rem 0 .5rem;color:var(--mut-l)}
+.dzo::before,.dzo::after{content:"";flex:1;height:1px;background:var(--line)}
+.dzl{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.7rem 1.35rem;border:1.5px solid var(--ink);border-radius:999px;font-weight:600;font-size:1rem;background:rgb(255 255 255/.6);transition:background .3s,color .3s,box-shadow .3s,translate .3s var(--ease)}
+.dzl svg{width:18px;height:18px;flex:none}
+.dzl:hover{background:var(--ink);color:var(--paper);translate:0 -2px;box-shadow:0 10px 22px -12px rgb(9 9 11/.6)}
+.dzl:active{scale:.97}
+/* library modal */
+.mp.wide{max-width:900px}
+.lb-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem 1rem;padding:.9rem 1rem .9rem 1.1rem;border-radius:14px;background:var(--wash)}
+.lb-top p{font-size:.9375rem;font-weight:500;color:var(--deep);max-width:34ch}
+.lb-top .btn{min-height:44px;padding:.5rem 1.15rem;font-size:.9375rem}
+.lib{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
+@media(max-width:420px){.lib{grid-template-columns:1fr 1fr;gap:10px}}
+.lc{position:relative;isolation:isolate;display:grid;grid-template-rows:auto 1fr;align-content:start;padding:0;text-align:left;border-radius:16px;background:#fff;border:1px solid var(--line);overflow:clip;box-shadow:var(--sh1);transition:translate .3s var(--ease),border-color .2s,box-shadow .3s}
+.lc:hover{translate:0 -3px;border-color:var(--orange);box-shadow:0 1px 1px rgb(9 9 11/.06),0 18px 36px -18px rgb(249 115 22/.5)}
+.lc:active{scale:.98}
+.lc-th{position:relative;aspect-ratio:4/3;background:var(--ink)}
+.lc-th img,.lc-th video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:scale .5s var(--ease)}
+.lc:hover .lc-th img,.lc:hover .lc-th video{scale:1.05}
+.lc-tp{position:absolute;z-index:2;top:8px;left:8px;padding:5px 7px;border-radius:6px;background:var(--ink);color:#fff;font:500 .625rem/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.lc-vp{position:absolute;z-index:2;right:8px;bottom:8px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--orange);color:var(--ink)}
+.lc-vp svg{width:16px;height:16px;fill:currentColor}
+.lc-mt{display:grid;align-content:start;gap:.35rem;padding:.65rem .8rem .75rem}
+.lc-mt b{font:600 .9375rem/1.25 var(--f-body);text-wrap:balance}
+.lc-ov{position:absolute;inset:0;z-index:3;display:none;place-items:center;background:rgb(9 9 11/.6);color:#fff}
+.lc.ld{pointer-events:none}.lc.ld .lc-ov{display:grid}
+.lc-ov .sp{width:26px;height:26px;border-width:3px}
+.lib-err{min-height:0;margin:0}.lib-err:empty{display:none}
+.lib-note{color:var(--mut-l);font-size:.875rem}
+.failsafe .pl,.failsafe .v{opacity:1!important;visibility:visible!important;transform:none!important}
+@media print{body>*:not(#report-modal){display:none!important}body::after,#mbk,.mh .ib,.mf,.noprint,#report-form-body{display:none!important}#report-modal{position:static;display:block}.mp{box-shadow:none;max-height:none;background:#fff}.mb{overflow:visible}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to analysis</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="mk" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#F97316"/><path d="M5.5 28 12.8 5.5h6.4L26.5 28z" fill="#09090B"/><path d="M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z" fill="#F97316"/></symbol></svg>
+<div id="sr-live" class="sr-only" aria-live="polite"></div>
+
+<header id="hdr">
+  <a class="logo" href="landing.html" aria-label="SadakSense home"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#mk"/></svg><span class="ul">Sadak<em>Sense</em></span></a>
+  <div class="hr">
+    <a id="pay-btn" class="btn bs" href="mistri.html" aria-label="Get Paid"><i data-lucide="wallet"></i><span class="vl">Get Paid</span></a>
+    <a id="viz-btn" class="btn bs" href="game.html" aria-label="3D Visualizer"><i data-lucide="box"></i><span class="vl">3D Visualizer</span></a>
+  </div>
+</header>
+<p id="banner" class="banner hidden" role="status"><span id="banner-t"></span><button class="ib" type="button" aria-label="Dismiss message" onclick="this.parentNode.classList.add('hidden')"><i data-lucide="x"></i></button></p>
+
+<main id="main" tabindex="-1">
+
+<section id="upload-section" class="v" aria-label="Upload">
+  <div class="in">
+    <h1 class="ttl"><span class="line"><span>Feed the</span></span><span class="line"><span class="acc">Engine</span></span></h1>
+    <p class="lead">Upload dashcam video, drone footage or street-level imagery to extract infrastructure intelligence.</p>
+    <input id="file-input" type="file" class="sr-only" accept="image/*,video/*" tabindex="-1">
+    <div id="dropzone" class="dz" role="button" tabindex="0" data-focus data-loop aria-describedby="dz-hint dz-error" aria-haspopup="dialog" aria-label="Add road media. Press Enter or Space to upload from your device or choose from our library.">
+      <i class="ls" data-overlay></i><i class="lane" data-overlay></i>
+      <i class="br t l"></i><i class="br t r"></i><i class="br b l"></i><i class="br b r"></i>
+      <div class="c">
+        <span class="tile"><i data-lucide="cloud-upload"></i></span>
+        <p id="dz-t" class="dzt">Drag &amp; Drop media here</p>
+        <p class="dzs">or click to upload from your device</p>
+        <span class="dzo lbl" aria-hidden="true">or</span>
+        <span class="dzl"><i data-lucide="images"></i>Choose from our library</span>
+        <p id="dz-hint" class="lbl dzh"><span class="hd">Up to 50 MB</span><span class="hm">Tap to upload or pick a sample</span></p>
+      </div>
+    </div>
+    <p id="dz-error" class="dz-error" role="alert"></p>
+    <div class="fmt" aria-label="Accepted formats"><span>.JPG</span><span>.PNG</span><span>.MP4</span></div>
+  </div>
+</section>
+
+<section id="processing-section" class="v hidden" aria-hidden="true" aria-label="Analysis in progress">
+  <div class="scan">
+    <div class="bay" id="bay">
+      <div id="processing-preview" class="bm"></div>
+      <div id="processing-preview-icon" class="bi hidden"><i data-lucide="film"></i></div>
+      <div class="bt"></div>
+      <div class="bg" data-overlay></div>
+      <div class="bret" id="reticles" data-overlay></div>
+      <div class="lz" data-overlay data-loop></div>
+      <span class="bc" id="bayFile"></span><span class="bc cb" id="bay-note"></span>
+      <i class="br t l"></i><i class="br t r"></i><i class="br b l"></i><i class="br b r"></i>
+    </div>
+    <div class="stage">
+      <div aria-live="polite" aria-atomic="true">
+        <p class="lbl" id="stepno">Step 1 of 5</p>
+        <h2 id="processing-text" tabindex="-1" data-focus>Reading file</h2>
+        <p id="processing-subtext">Checking format and size</p>
+      </div>
+      <ol class="steps" id="steps"><li></li><li></li><li></li><li></li><li></li></ol>
+      <div class="track"><div id="progress-bar"></div></div>
+      <div class="srow"><span class="lbl" id="progress-pct">Step 1 of 5</span><span class="lbl num" id="elapsed">0.0 s</span></div>
+      <div><button id="cancel-btn" class="btn bs ond" type="button">Cancel</button></div>
+      <div id="proc-err" class="perr hidden" role="alert"><p id="proc-err-t"></p><button id="retry-btn" class="btn bp" type="button">Retry</button><button id="another-btn" class="btn bs ond" type="button">Choose another file</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="results-section" class="v hidden" aria-hidden="true" data-tone="moderate" aria-label="Analysis results">
+  <div class="band">
+    <div class="flood" aria-hidden="true"></div>
+    <div class="wrap bandg">
+      <div class="rc">
+        <p class="lbl res-eyebrow"><svg class="ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg><span>Analysis Complete</span></p>
+        <span class="fchip"><i data-lucide="file-check"></i><span id="file-name-display" title="">filename.jpg</span></span><span class="sr-only" id="file-full"></span>
+        <div class="trow">
+          <span id="status-icon-bg" class="sic" aria-hidden="true"></span>
+          <h2 id="results-title" tabindex="-1" data-focus><span class="sc">Surface Condition</span><span class="line"><span class="rt" id="road-status-title">Evaluating</span></span></h2>
+        </div>
+        <p id="road-recommendation" class="rec"></p>
+        <div class="res-actions">
+          <button id="report-btn" class="btn bp" type="button" onclick="openReportModal()" style="display:none"><i data-lucide="flag"></i>Report to Authorities<i data-lucide="arrow-up-right" class="go"></i></button>
+          <button class="btn bs" type="button" onclick="resetApp()"><i data-lucide="refresh-cw"></i>Analyze Another</button>
+        </div>
+      </div>
+      <div class="gp">
+        <svg id="gauge" viewBox="0 0 240 150" role="img" aria-label="RQI gauge, 0 to 10"><defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#EF4444"/><stop offset=".33" stop-color="#F97316"/><stop offset=".55" stop-color="#EAB308"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
+          <path d="M30 120 A90 90 0 0 1 210 120" fill="none" stroke="#E4E4E7" stroke-width="14" stroke-linecap="round"/>
+          <path id="gaugeArc" d="M30 120 A90 90 0 0 1 210 120" fill="none" stroke="url(#gr)" stroke-width="14" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+          <line id="needle" x1="120" y1="120" x2="120" y2="52" stroke="#09090B" stroke-width="3" stroke-linecap="round"/><circle cx="120" cy="120" r="8" fill="#09090B"/>
+          <text x="26" y="140">0</text><text x="116" y="14">5</text><text x="206" y="140">10</text></svg>
+        <div class="gn"><span id="rqi-value" aria-hidden="true">0.0</span><span class="num">/10</span></div>
+        <div id="rqi-badge" class="stamp badge-stamp"><span class="lbl">RQI</span><b class="num" id="rqi-badge-n">0.0</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bento">
+    <article class="pl p-media is-above" id="p-media"><div class="pi"><div class="media">
+      <div id="result-media-container" class="rm"></div><div class="bt"></div><div class="bret" id="res-ret" data-overlay></div><div class="lz one" id="res-laser" data-overlay></div></div></div></article>
+    <article class="pl p-speed is-above" id="p-speed"><div class="pi"><h3>Estimated Speed</h3>
+      <div class="sv"><b id="speed-value">0</b><span class="num">km/h</span></div>
+      <div class="track l"><div id="speed-bar"></div></div>
+      <div class="tick num" aria-hidden="true"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span></div></div></article>
+    <article class="pl p-cong is-above" id="p-cong"><div class="pi"><h3>Congestion Level</h3>
+      <p id="congestion-level" class="cl">Low</p>
+      <div class="segs"><div class="seg" id="cong-bar-1"><i></i></div><div class="seg" id="cong-bar-2"><i></i></div><div class="seg" id="cong-bar-3"><i></i></div></div></div></article>
+    <article class="pl p-tel" id="p-tel"><div class="pi"><h3 id="tel-t">Extracted Telemetry</h3><p id="tel-s"></p><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div id="terminal-stream" class="term"></div></div></article>
+    <article class="pl p-radar" id="p-radar"><div class="pi"><h3>Multi-Axis Quality Radar <span class="tg demo-only">Sample</span></h3><div class="cb"><canvas id="radarChart" role="img" aria-label="Radar chart of six quality axes"></canvas></div><p id="radar-note" class="note"></p></div></article>
+    <article class="pl p-donut" id="p-donut"><div class="pi"><h3>Surface Composition <span class="tg demo-only">Sample</span></h3><div class="dn"><div class="cb sq"><canvas id="doughnutChart" role="img" aria-label="Doughnut chart of surface composition"></canvas><div class="dc"><b class="num" id="dn-c">-</b><span id="dn-l"></span></div></div><ul id="doughnut-legend" class="lg"></ul></div></div></article>
+    <article class="pl p-line" id="p-line"><div class="pi"><h3>Simulated Speed Profile <span class="tg demo-only">Sample</span></h3><div class="cb"><canvas id="lineChart" role="img" aria-label="Line chart of simulated speed from 0 to 550 metres"></canvas></div></div></article>
+    <article class="pl p-infra" id="p-infra"><div class="pi"><h3>Infrastructure Metrics</h3><div id="infra-metrics"></div></div></article>
+    <article class="pl p-risk" id="p-risk"><div class="pi"><h3>Risk Factors <span class="tg demo-only">Sample</span></h3><div id="risk-tags" class="tags"></div><p id="risk-summary"></p></div></article>
+    <article class="pl p-bar" id="p-bar"><div class="pi"><h3>Maintenance Priority <span class="tg" id="bar-tag"></span></h3><div class="cb s"><canvas id="barChart" role="img" aria-label="Bar chart of maintenance priority"></canvas></div></div></article>
+  </div>
+</section>
+</main>
+
+<div id="sbar" aria-label="Report actions"><button id="report-btn-s" class="btn bp" type="button" onclick="openReportModal()" style="display:none"><i data-lucide="flag"></i>Report to Authorities</button><button class="btn bs" type="button" onclick="resetApp()"><i data-lucide="refresh-cw"></i>Analyze Another</button></div>
+
+<div id="report-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="report-title" aria-hidden="true">
+  <div id="mbk"></div>
+  <div class="mp">
+    <div class="mh">
+      <div><h2 id="report-title" tabindex="-1">Report Road Damage</h2><p id="report-sub">This will generate an official complaint to the relevant Municipal / NHAI authority.</p></div>
+      <button class="ib" type="button" aria-label="Close" onclick="closeReportModal()"><i data-lucide="x"></i></button>
+    </div>
+
+    <div id="report-form-body" class="mb" data-lenis-prevent>
+      <fieldset class="grp"><legend class="lbl">Location Details</legend><div class="fg">
+        <div class="wide"><label for="inp-address">Full Street Address <span aria-hidden="true">*</span><span class="sr-only">required</span></label><input id="inp-address" type="text" autocomplete="street-address" placeholder="e.g. 14, MG Road, Near Connaught Place"></div>
+        <div><label for="inp-city">City <span aria-hidden="true">*</span><span class="sr-only">required</span></label><input id="inp-city" type="text" autocomplete="address-level2" placeholder="e.g. New Delhi"></div>
+        <div><label for="inp-district">District</label><input id="inp-district" type="text" placeholder="e.g. Central Delhi"></div>
+        <div><label for="inp-state">State <span aria-hidden="true">*</span><span class="sr-only">required</span></label><select id="inp-state" autocomplete="address-level1"><option value="">Select State...</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option><option>Delhi (NCT)</option><option>Jammu &amp; Kashmir</option><option>Ladakh</option><option>Puducherry</option><option>Chandigarh</option></select></div>
+        <div><label for="inp-pin">PIN Code <span aria-hidden="true">*</span><span class="sr-only">required</span></label><input id="inp-pin" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="postal-code" placeholder="e.g. 110001"></div>
+      </div></fieldset>
+      <fieldset class="grp"><legend class="lbl">Damage Details</legend><div class="fg">
+        <div><label for="inp-roadtype">Road Type</label><select id="inp-roadtype"><option>Municipal Road</option><option>State Highway</option><option>National Highway</option><option>Urban Arterial Road</option><option>Colony / Internal Road</option></select></div>
+        <div><label for="inp-since">Damage Since (Approx.)</label><select id="inp-since"><option>Less than 1 week</option><option>1–4 weeks</option><option>1–3 months</option><option>3–6 months</option><option>More than 6 months</option></select></div>
+      </div></fieldset>
+      <fieldset class="grp"><legend class="lbl">Complainant</legend><div class="fg">
+        <div class="wide"><label for="inp-name">Your Name (Complainant) <span aria-hidden="true">*</span><span class="sr-only">required</span></label><input id="inp-name" type="text" autocomplete="name" placeholder="Full Name"></div>
+        <div><label for="inp-phone">Contact Number</label><input id="inp-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210"></div>
+        <div><label for="inp-email">Your Email</label><input id="inp-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="wide"><label for="inp-notes">Additional Observations</label><textarea id="inp-notes" rows="3" placeholder="Any additional details: nearby landmarks, accident history, flooding, etc."></textarea></div>
+      </div></fieldset>
+      <p id="report-error" class="hidden" role="alert"></p>
+    </div>
+    <div id="foot-form" class="mf"><button class="btn bs" type="button" onclick="closeReportModal()">Cancel</button><button id="fin-btn" class="btn bp" type="button" onclick="finalizeReport()"><i data-lucide="send" class="go"></i><span>Finalize &amp; Generate Complaint</span></button></div>
+
+    <div id="complaint-output" class="mb hidden" data-lenis-prevent>
+      <div class="refrow"><span class="lbl">Reference</span><span id="complaint-ref" class="num"></span><button class="cpy" type="button" onclick="copyComplaint()"><i data-lucide="copy" class="ic1"></i><i data-lucide="check" class="ic2"></i>Copy</button></div>
+      <div class="paper"><pre id="complaint-text"></pre></div>
+      <div class="where"><h3>Where to send this complaint</h3><div id="authority-info"></div></div>
+    </div>
+    <div id="foot-letter" class="mf hidden"><button class="btn bs" type="button" onclick="closeReportModal()">Close</button><button id="copy-full" class="btn bp" type="button" onclick="copyComplaint()"><i data-lucide="copy" class="ic1"></i><i data-lucide="check" class="ic2"></i><span>Copy Full Complaint</span></button></div>
+  </div>
+</div>
+
+<div id="lib-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="lib-title" aria-hidden="true">
+  <div id="lbk"></div>
+  <div class="mp wide">
+    <div class="mh">
+      <div><h2 id="lib-title" tabindex="-1">Choose media</h2><p id="lib-sub">Pick a sample road image or video from our library. No upload needed.</p></div>
+      <button class="ib" type="button" aria-label="Close" id="lib-close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="mb" data-lenis-prevent>
+      <div class="lb-top"><p>Have your own footage? Upload a photo or video from this device.</p><button id="lib-device" class="btn bp" type="button"><i data-lucide="upload"></i>Upload from device</button></div>
+      <div id="lib-grid" class="lib"></div>
+      <p id="lib-err" class="dz-error lib-err" role="alert"></p>
+      <p class="lib-note">Library files are streamed from SadakSense. Videos can take a few seconds to load.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"><span id="toast-t"></span><button class="ib" type="button" aria-label="Dismiss" onclick="this.parentNode.classList.remove('on')"><i data-lucide="x"></i></button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script>
+'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const root=document.documentElement;
+/* Reduced motion is disabled: animations always run */
+const reduce=false;
+const hasG=typeof gsap!=='undefined',hasST=hasG&&typeof ScrollTrigger!=='undefined';
+/* If GSAP fails to load, a tiny shim applies end states so every view still works */
+if(!hasG){const ap=(t,v)=>{(typeof t==='string'?$$(t):t&&t.nodeType?[t]:Array.isArray(t)?t:[t]).forEach(e=>{if(!e||!e.style){if(e)Object.assign(e,v);return}
+ if('autoAlpha' in v){e.style.opacity=v.autoAlpha;e.style.visibility=v.autoAlpha?'visible':'hidden'}if('opacity' in v)e.style.opacity=v.opacity;
+ if(v.scaleX!=null)e.style.transform='scaleX('+v.scaleX+')';if(v.clipPath)e.style.clipPath=v.clipPath;
+ if(v.rotation!=null&&v.svgOrigin)e.setAttribute('transform','rotate('+v.rotation+' '+v.svgOrigin+')');if(v.strokeDashoffset!=null)e.style.strokeDashoffset=v.strokeDashoffset})};
+ const run=(t,v)=>{ap(t,v);v.onUpdate&&v.onUpdate();v.onComplete&&v.onComplete()};
+ window.gsap={set:ap,to:run,fromTo:(t,a,b)=>run(t,b),from:()=>{},timeline:()=>{const o={to:()=>o,from:()=>o,fromTo:()=>o,add:f=>{f();return o}};return o},ticker:{add(){},lagSmoothing(){}},registerPlugin(){},quickTo:()=>()=>{}}}
+/* One time base: gsap.ticker drives Lenis */
+let lenis=null;
+function setLenis(){if(!hasG||typeof Lenis==='undefined')return;
+ if(reduce&&lenis){lenis.destroy();lenis=null}
+ else if(!reduce&&!lenis){lenis=new Lenis({lerp:.085,wheelMultiplier:.9,smoothWheel:true,syncTouch:false,autoRaf:false});if(hasST)lenis.on('scroll',ScrollTrigger.update)}}
+if(hasG){if(hasST)gsap.registerPlugin(ScrollTrigger);gsap.ticker.add(t=>{if(lenis)lenis.raf(t*1000)});gsap.ticker.lagSmoothing(0)}
+setLenis();
+const ic=()=>{try{window.lucide&&lucide.createIcons()}catch(e){}};ic();
+setTimeout(()=>{if(!window.__ok)root.classList.add('failsafe')},4000);
+
+/* helpers */
+const h=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const mid=(n,m=28)=>{if(n.length<=m)return n;const d=n.lastIndexOf('.'),x=d>0?n.slice(d):'',b=n.slice(0,n.length-x.length),k=m-x.length-1,a=Math.ceil(k*.6),c=Math.floor(k*.4);return b.slice(0,a)+'…'+b.slice(b.length-c)+x};
+const fmtSize=b=>b<1048576?Math.max(1,Math.round(b/1024))+' KB':(b/1048576).toFixed(1)+' MB';
+const hx=(c,a)=>{const n=parseInt(c.slice(1),16);return'rgba('+(n>>16)+','+(n>>8&255)+','+(n&255)+','+a+')'};
+function countTo(el,end,dec,dur){const o={v:0};gsap.to(o,{v:end,duration:reduce?0:(dur||1.4),ease:'power2.out',onUpdate:()=>{el.textContent=o.v.toLocaleString('en-IN',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0})}})}
+const say=m=>{const l=$('#sr-live');l.textContent='';setTimeout(()=>{l.textContent=m},50)};
+let toastT=null;
+function toast(m){const t=$('#toast');$('#toast-t').textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3000);t.onmouseenter=()=>clearTimeout(toastT);t.onmouseleave=()=>{toastT=setTimeout(()=>t.classList.remove('on'),1500)}}
+function banner(m){$('#banner-t').textContent=m;$('#banner').classList.remove('hidden');say(m)}
+
+/* loops pause off-screen and in hidden tabs */
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('is-paused',!e.isIntersecting)),{rootMargin:'120px'});$$('[data-loop]').forEach(e=>io.observe(e))}
+document.addEventListener('visibilitychange',()=>root.classList.toggle('tab-hidden',document.hidden));
+
+/* ---------- state machine ---------- */
+const V={idle:$('#upload-section'),analyzing:$('#processing-section'),results:$('#results-section')};
+const MSG={idle:'Ready. Choose a road image or video to analyze.',analyzing:'Analysis started.',results:'Analysis complete.'};
+let state='idle';
+function goto(next,after){
+ if(next===state){after&&after();return}
+ const from=V[state],to=V[next],wipe=next==='analyzing';
+ gsap.to(from,{autoAlpha:0,y:-12,duration:reduce?0:.3,ease:'power2.in',onComplete:()=>{
+  from.classList.add('hidden');from.setAttribute('aria-hidden','true');gsap.set(from,{clearProps:'all'});
+  to.classList.remove('hidden');to.removeAttribute('aria-hidden');state=next;
+  if(lenis)lenis.scrollTo(0,{immediate:true});else scrollTo(0,0);
+  if(wipe&&!reduce)gsap.fromTo(to,{clipPath:'inset(100% 0 0 0)'},{clipPath:'inset(0% 0 0 0)',duration:.6,ease:'power3.inOut',clearProps:'clipPath'});
+  else gsap.fromTo(to,{autoAlpha:0,y:16},{autoAlpha:1,y:0,duration:reduce?0:.6,ease:'expo.out',clearProps:'transform'});
+  const f=$('[data-focus]',to);if(f)f.focus({preventScroll:true});
+  say(MSG[next]);after&&after()}})}
+
+/* ---------- drop zone ---------- */
+const dz=$('#dropzone'),fi=$('#file-input'),MAX_MB=50;let dd=0,url=null,curFile=null,curVid=false,ctl=null,timerId=null,cur=null;
+const isVid=f=>/^video\//.test(f.type)||/\.(mp4|webm|ogg|mov|mkv)$/i.test(f.name);
+['dragenter','dragover','dragleave','drop'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();e.stopPropagation()}));
+const dzOut=()=>{dz.classList.remove('over');$('#dz-t').textContent='Drag & Drop media here'};
+dz.addEventListener('dragenter',()=>{dd++;dz.classList.add('over');$('#dz-t').textContent='Release to analyze'});
+dz.addEventListener('dragleave',()=>{if(--dd<=0){dd=0;dzOut()}});
+dz.addEventListener('drop',e=>{dd=0;dzOut();handleFiles(e.dataTransfer.files)});
+dz.addEventListener('click',()=>openLib());
+dz.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLib()}});
+fi.addEventListener('change',()=>handleFiles(fi.files));
+function validate(f){
+ if(!f)return'No file received. Choose an image or video.';
+ if(f.size===0)return'This file is empty.';
+ if(!(/^(image\/(jpeg|png)|video\/)/.test(f.type)||/\.(jpe?g|png|mp4|webm|ogg|mov|mkv)$/i.test(f.name)))return'This file type is not supported. Use JPG, PNG or MP4.';
+ if(f.size>MAX_MB*1048576)return'This file is larger than '+MAX_MB+' MB. Choose a smaller one.';
+ return''}
+function dzFail(m){$('#dz-error').textContent=m;dz.classList.add('bad');fi.value='';
+ gsap.fromTo(dz,{x:-6},{x:0,duration:reduce?0:.4,ease:'elastic.out(1,.4)'});gsap.fromTo('.fmt span',{scale:1.12},{scale:1,duration:reduce?0:.4,stagger:.05})}
+function handleFiles(files){
+ const f=files&&files[0],err=validate(f);
+ if(err){dzFail(err);return}
+ dz.classList.remove('bad');$('#dz-error').textContent=files.length>1?'Only the first file was used.':'';
+ processFile(f,isVid(f))}
+
+/* ---------- media library ----------
+   Files live in the /data folder that is deployed with this page (Vercel serves it as static files).
+   To host them elsewhere (GitHub raw, Cloudflare R2, S3...), define window.SADAK_LIB_BASE
+   (e.g. 'https://your-host.com/path/') in an earlier script tag. The host must send CORS headers. */
+const LIB_BASE=window.SADAK_LIB_BASE||'data/';
+const LIB=[
+ {f:'s_road.jpg',t:'Countryside Curve',k:'image'},
+ {f:'dm_road.jpg',t:'City Street Corner',k:'image'},
+ {f:'m_road2.png',t:'Flyover Construction Zone',k:'image'},
+ {f:'sroad.mp4',t:'Sunset Drive',k:'video'},
+ {f:'d_road2.jpg',t:'Village Road Stretch',k:'image'},
+ {f:'sm_road.jpg',t:'Forest Highway',k:'image'},
+ {f:'m_road3.jpg',t:'Highway Shoulder View',k:'image'},
+ {f:'d_road3.jpg',t:'Narrow Lane',k:'image'},
+ {f:'smooth_road2.jpg',t:'Open Fields Straight',k:'image'},
+ {f:'damage_road.jpg',t:'Expressway View',k:'image'},
+ {f:'s_road2.jpg',t:'Dashcam Open Road',k:'image'},
+ {f:'droad.mp4',t:'Dashcam Drive',k:'video'}];
+const LM=$('#lib-modal'),LP=$('.mp',LM),libCache=new Map();let libBuilt=false,libLast=null,libBusy=false;
+const libMime=it=>it.k==='video'?'video/mp4':/\.png$/i.test(it.f)?'image/png':'image/jpeg';
+function buildLib(){
+ libBuilt=true;
+ const grid=$('#lib-grid');
+ LIB.forEach(it=>{
+  const c=h('button','lc');c.type='button';
+  c.setAttribute('aria-label','Use '+it.t+', '+it.k);
+  const th=h('div','lc-th'),m=document.createElement(it.k==='video'?'video':'img');
+  if(it.k==='video'){m.muted=true;m.playsInline=true;m.preload='metadata';m.src=LIB_BASE+it.f+'#t=0.6';m.setAttribute('aria-hidden','true');m.tabIndex=-1}
+  else{m.alt='';m.loading='lazy';m.decoding='async';m.src=LIB_BASE+it.f}
+  m.onerror=()=>{th.classList.add('bad');m.remove()};
+  th.appendChild(m);th.appendChild(h('span','lc-tp',it.k==='video'?'Video':'Image'));
+  if(it.k==='video'){const v=h('span','lc-vp');v.innerHTML='<i data-lucide="play"></i>';th.appendChild(v)}
+  const ov=h('span','lc-ov');ov.appendChild(h('i','sp'));th.appendChild(ov);
+  const mt=h('div','lc-mt');mt.appendChild(h('b',null,it.t));
+  c.appendChild(th);c.appendChild(mt);c.addEventListener('click',()=>pickLib(it,c));grid.appendChild(c)});
+ ic()}
+function openLib(){
+ if(!LM.classList.contains('hidden'))return;
+ if(!libBuilt)buildLib();
+ libLast=document.activeElement;$('#lib-err').textContent='';
+ LM.classList.remove('hidden');LM.setAttribute('aria-hidden','false');root.classList.add('modal-open');if(lenis)lenis.stop();
+ gsap.fromTo(LP,{y:24,scale:.96,autoAlpha:0},{y:0,scale:1,autoAlpha:1,duration:reduce?0:.45,ease:'expo.out'});
+ gsap.fromTo('#lib-grid .lc',{y:14,autoAlpha:0},{y:0,autoAlpha:1,stagger:reduce?0:.035,duration:reduce?0:.4,delay:reduce?0:.12,clearProps:'transform,opacity,visibility'});
+ $('#lib-title').focus({preventScroll:true});say('Media library opened.')}
+function closeLib(instant,keepFocus){
+ if(LM.classList.contains('hidden'))return;
+ const fin=()=>{LM.classList.add('hidden');LM.setAttribute('aria-hidden','true');root.classList.remove('modal-open');if(lenis)lenis.start();
+  gsap.set(LP,{clearProps:'all'});if(!keepFocus&&libLast&&libLast.focus)libLast.focus()};
+ if(instant||reduce)fin();else gsap.to(LP,{y:12,scale:.98,autoAlpha:0,duration:.25,ease:'power2.in',onComplete:fin})}
+$('#lib-close').addEventListener('click',()=>closeLib());
+$('#lbk').addEventListener('click',()=>closeLib());
+$('#lib-device').addEventListener('click',()=>{closeLib(true,true);fi.click()});
+async function pickLib(it,btn){
+ if(libBusy)return;libBusy=true;btn.classList.add('ld');btn.setAttribute('aria-busy','true');$('#lib-err').textContent='';
+ const src=LIB_BASE+it.f,type=libMime(it);let file=libCache.get(it.f);
+ try{
+  if(!file){const r=await fetch(src);if(!r.ok)throw new Error('status '+r.status);file=new File([await r.blob()],it.f,{type});libCache.set(it.f,file)}
+  closeLib(true,true);handleFiles([file])}
+ catch(e){
+  if(location.protocol==='file:'){closeLib(true,true);handleFiles([{name:it.f,size:1,type,_src:src}])}
+  else $('#lib-err').textContent='We could not load "'+it.t+'". Check your connection and try again, or upload from your device.'}
+ finally{btn.classList.remove('ld');btn.removeAttribute('aria-busy');libBusy=false}}
+
+/* ---------- Demo / Live adapter ---------- */
+const API=window.SADAK_API_BASE||'';let MODE='demo';
+const DEMO_STAGES=[{label:'Reading file',sub:'Checking format and size'},{label:'Analyzing surface',sub:'Preparing the sample analysis'},{label:'Scoring',sub:'Computing the quality index'},{label:'Estimating speed',sub:'Relating quality to speed'},{label:'Building report',sub:'Assembling the diagnostic report'}];
+const LIVE_STAGES=[{label:'Uploading',sub:'Sending the file to the analysis service'},{label:'Detecting damage',sub:'Waiting for the analysis service'},{label:'Scoring',sub:'Reading the quality index'},{label:'Estimating speed',sub:'Reading the speed estimate'},{label:'Building report',sub:'Assembling the diagnostic report'}];
+let stages=DEMO_STAGES;
+function setMode(m){MODE=m;root.dataset.mode=m;}
+async function detectMode(){let m='demo';
+ if(navigator.onLine===false)banner('You appear to be offline. Sample analysis still works.');
+ else if(API){try{const r=await fetch(API+'/v1/health',{signal:AbortSignal.timeout?AbortSignal.timeout(1500):undefined});if(r.ok&&(await r.json()).detector_ready)m='live'}catch(e){}}
+ setMode(m)}
+setMode('demo');detectMode();
+addEventListener('offline',()=>{setMode('demo');banner('You appear to be offline. Sample analysis still works.')});addEventListener('online',detectMode);
+const toneOf=r=>r>=7?'good':r>=3.5?'moderate':'critical';
+const MSG_T={good:'Optimal conditions detected. Safe for standard speed limits. No immediate infrastructure maintenance required.',moderate:'Minor surface defects identified. Caution advised. Recommend scheduling standard municipal inspection within 90 days.',critical:'CRITICAL: Heavy structural damage/potholes detected. High risk of vehicle damage and severe traffic bottlenecks. Urgent repair needed.'};
+const COND_T={good:'Optimal (Smooth)',moderate:'Moderately Damaged',critical:'Heavily Damaged'};
+function sampleFromFileName(file){
+ const n=file.name.toLowerCase(),r=(a,b)=>+(a+Math.random()*b).toFixed(1),s=(a,b)=>Math.floor(a+Math.random()*b);
+ if(n.startsWith('s'))return{type:'Smooth Road',rqi:r(8.5,1.4),speed:s(50,11),congestion:'Low',message:MSG_T.good};
+ if(n.startsWith('m'))return{type:'Moderate Wear',rqi:r(4.5,2.4),speed:s(30,11),congestion:'Moderate',message:MSG_T.moderate};
+ if(n.startsWith('d'))return{type:'Severe Damage',rqi:r(1.5,1.9),speed:s(15,11),congestion:'High',message:MSG_T.critical};
+ return{type:'Moderate Wear (Default)',rqi:r(4.5,2.4),speed:s(30,11),congestion:'Moderate',message:'Standard analysis applied. Minor surface defects identified. Caution advised during transit.'}}
+function normalize(r,mode,file,mu){
+ const rqi=Math.max(0,Math.min(10,+r.rqi)),tone=toneOf(rqi),cg=r.congestion==='Medium'?'Moderate':r.congestion;
+ return{mode,fileName:file.name,fileType:file.type||'unknown',fileSize:file.size,isVideo:isVid(file),mediaUrl:mu,rqi,tone,condition:r.condition||r.type||COND_T[tone],
+  speedKmh:Math.round(r.est_speed_kmh!=null?r.est_speed_kmh:r.speed),congestion:cg,congLevel:cg==='Low'?1:cg==='Moderate'?2:3,message:r.message||MSG_T[tone],
+  damageCounts:r.damage_counts||null,composition:r.surface_composition||null,drivers:r.drivers||null,detections:r.detections||null}}
+async function analyze(file,mu,signal,onStage){
+ const abort=()=>{if(signal.aborted)throw new DOMException('Cancelled','AbortError')};
+ if(MODE==='live'&&!file._src){try{
+   stages=LIVE_STAGES;renderSteps();onStage(0);const fd=new FormData();fd.append('file',file);onStage(1);
+   const res=await fetch(API+'/v1/analyze',{method:'POST',body:fd,signal});if(!res.ok)throw new Error('status '+res.status);
+   const j=await res.json();if(Array.isArray(j.stages)&&j.stages.length===5){stages=j.stages.map((s,i)=>({label:s.label||LIVE_STAGES[i].label,sub:s.sub||LIVE_STAGES[i].sub}));renderSteps()}
+   for(const i of[2,3,4]){abort();onStage(i);await wait(300)}
+   return normalize(j,'live',file,mu)}
+  catch(e){if(e.name==='AbortError')throw e;setMode('demo');banner('Analysis service did not respond. Showing a demo analysis instead.')}}
+ stages=DEMO_STAGES;renderSteps();
+ const sample=sampleFromFileName(file);
+ for(let i=0;i<5;i++){abort();onStage(i);await wait(650)}
+ abort();return normalize(sample,'demo',file,mu)}
+
+/* ---------- analyzing view ---------- */
+function renderSteps(){$$('#steps li').forEach((li,i)=>{li.textContent=stages[i].label})}
+function setStage(i){
+ const n=5,k=Math.min(i,n-1),s=stages[k];
+ $('#processing-text').textContent=s.label;$('#processing-subtext').textContent=s.sub||'';
+ $('#stepno').textContent=$('#progress-pct').textContent='Step '+(k+1)+' of '+n;
+ gsap.to('#progress-bar',{scaleX:(k+1)/n,duration:reduce?0:.5,ease:'power2.out'});
+ $$('#steps li').forEach((li,j)=>{li.classList.toggle('is-done',j<i);li.classList.toggle('is-active',j===i)})}
+function buildBay(){
+ const pv=$('#processing-preview'),ico=$('#processing-preview-icon');pv.innerHTML='';ico.classList.add('hidden');$('#bay-note').textContent='';$('#reticles').innerHTML='';
+ const el=document.createElement(curVid?'video':'img');el.id='bayMedia';
+ if(curVid){el.muted=true;el.loop=true;el.autoplay=true;el.playsInline=true;el.preload='metadata';el.onerror=()=>{pv.innerHTML='';ico.classList.remove('hidden');$('#bay-note').textContent='Preview unavailable for this video. Analysis can still run.'}}
+ else{el.alt='Uploaded road media being analyzed';el.decoding='async'}
+ el.src=url;pv.appendChild(el);
+ const f=$('#bayFile');f.textContent=mid(curFile.name,34);f.title=curFile.name;f.setAttribute('aria-label',curFile.name)}
+function processFile(file,isVideo){
+ curFile=file;curVid=!!isVideo;
+ if(url)URL.revokeObjectURL(url);url=file._src||URL.createObjectURL(file);
+ const go=()=>{buildBay();goto('analyzing',startAnalysis)};
+ if(!curVid){const p=new Image();p.onload=go;p.onerror=()=>{URL.revokeObjectURL(url);url=null;dzFail('We could not read this image. Try another file.');dz.focus()};p.src=url}
+ else go()}
+function startAnalysis(){
+ ctl=new AbortController();const t0=performance.now(),el=$('#elapsed');
+ $('#proc-err').classList.add('hidden');$('#cancel-btn').parentNode.classList.remove('hidden');
+ gsap.set('#progress-bar',{scaleX:0});stages=MODE==='live'?LIVE_STAGES:DEMO_STAGES;renderSteps();setStage(0);
+ clearInterval(timerId);timerId=setInterval(()=>{el.textContent=((performance.now()-t0)/1000).toFixed(1)+' s'},100);
+ analyze(curFile,url,ctl.signal,setStage)
+  .then(d=>{clearInterval(timerId);return pulse(d).then(()=>showResults(d))})
+  .catch(e=>{clearInterval(timerId);
+   if(e&&e.name==='AbortError'){toast('Analysis cancelled.');cleanup();goto('idle')}
+   else procError('Analysis failed. Retry or choose another file.')})}
+function pulse(d){return new Promise(res=>{
+ setStage(5);$('#progress-pct').textContent='Complete';
+ const dets=d.mode==='live'&&d.detections&&d.detections.length&&!d.isVideo;
+ if(dets){lastDet=d.detections;const im=$('#bayMedia');im.complete?drawRet(im,$('#reticles'),lastDet):im.addEventListener('load',()=>drawRet(im,$('#reticles'),lastDet))}
+ gsap.fromTo('#steps',{scale:1.02},{scale:1,duration:reduce?0:.5,ease:'expo.out'});
+ setTimeout(res,reduce?0:(dets?1200:350))})}
+function procError(m){
+ $('#proc-err-t').textContent=m;$('#proc-err').classList.remove('hidden');$('#cancel-btn').parentNode.classList.add('hidden');
+ if(!reduce)gsap.fromTo('.stage',{x:-6},{x:0,duration:.4,ease:'elastic.out(1,.4)'});
+ say('Analysis failed. Retry or choose another file.');$('#retry-btn').focus()}
+$('#cancel-btn').addEventListener('click',()=>ctl&&ctl.abort());
+$('#retry-btn').addEventListener('click',startAnalysis);
+$('#another-btn').addEventListener('click',()=>{cleanup();goto('idle')});
+function cleanup(){
+ if(url){URL.revokeObjectURL(url);url=null}fi.value='';lastDet=null;
+ $('#processing-preview').innerHTML='';$('#result-media-container').innerHTML='';$('#reticles').innerHTML='';$('#res-ret').innerHTML='';$('#res-laser').classList.remove('run');
+ $('#dz-error').textContent='';dz.classList.remove('bad');gsap.set('#progress-bar',{scaleX:0})}
+
+/* ---------- detection reticles mapped to the displayed image ---------- */
+let lastDet=null;
+function displayedRect(img){const bw=img.clientWidth,bh=img.clientHeight,ar=img.naturalWidth/img.naturalHeight;let w=bw,hh=bw/ar;if(hh>bh){hh=bh;w=bh*ar}return{x:(bw-w)/2,y:(bh-hh)/2,w:w,h:hh}}
+function drawRet(img,layer,dets){
+ if(!img||!layer||!img.naturalWidth)return;layer.innerHTML='';const r=displayedRect(img);
+ dets.forEach((d,i)=>{const b=d.bbox;if(!b||b.length<4)return;const el=h('div','ret');
+  el.style.cssText='left:'+(r.x+b[0]/img.naturalWidth*r.w)+'px;top:'+(r.y+b[1]/img.naturalHeight*r.h)+'px;width:'+((b[2]-b[0])/img.naturalWidth*r.w)+'px;height:'+((b[3]-b[1])/img.naturalHeight*r.h)+'px';
+  el.appendChild(h('span',null,d.cls+' '+Math.round(d.confidence*100)+'%'));layer.appendChild(el);
+  if(!reduce)gsap.from(el,{scale:1.3,autoAlpha:0,duration:.25,delay:i*.12,ease:'power2.out'})})}
+if(typeof ResizeObserver!=='undefined'){const ro=new ResizeObserver(()=>{if(!lastDet)return;const a=state==='analyzing'?[$('#bayMedia'),$('#reticles')]:[$('#result-media-container img'),$('#res-ret')];drawRet(a[0],a[1],lastDet)});ro.observe($('#bay'));ro.observe($('.media'))}
+
+/* ---------- results ---------- */
+const ICON={good:'circle-check',moderate:'circle-alert',critical:'octagon-alert'};
+const AX=['RQI','Grip','Drainage','Signage','Visibility','Stability'];
+let trigs=[],obs=[],charts={};const Q=[];let qb=false;
+const tone=()=>getComputedStyle(V.results).getPropertyValue('--tone').trim()||'#EAB308';
+function queue(f){Q.push(f);if(qb)return;qb=true;(function n(){const f=Q.shift();if(!f){qb=false;return}requestAnimationFrame(()=>{try{f()}catch(e){console.error(e)}setTimeout(n,120)})})()}
+function destroyCharts(){$$('canvas').forEach(c=>{if(typeof Chart==='undefined')return;const ch=Chart.getChart(c);if(ch)ch.destroy()});charts={}}
+function showResults(d){
+ cur=d;MSG.results='Analysis complete. Surface condition: '+d.condition+'. RQI: '+d.rqi.toFixed(1)+' out of 10.';
+ populateResults(d);goto('results',()=>playResults(d))}
+function mediaEl(d,into){
+ into.innerHTML='';if(!d.mediaUrl)return null;
+ const el=document.createElement(d.isVideo?'video':'img');
+ if(d.isVideo){el.muted=true;el.loop=true;el.autoplay=true;el.playsInline=true;el.preload='metadata';el.onerror=()=>{into.innerHTML='<div style="position:absolute;inset:0;display:grid;place-items:center;color:#A1A1AA;text-align:center;padding:1rem">Preview unavailable for this video.</div>'}}
+ else{el.alt='Analyzed road image';el.decoding='async'}
+ el.src=d.mediaUrl;into.appendChild(el);return el}
+function populateResults(d){
+ V.results.dataset.tone=d.tone;setMode(d.mode);
+ $('#road-status-title').textContent=d.condition;
+ const fn=$('#file-name-display');fn.textContent=mid(d.fileName,40);fn.title=d.fileName;$('#file-full').textContent=d.fileName;
+ $('#status-icon-bg').innerHTML='<i data-lucide="'+ICON[d.tone]+'"></i>';
+ $('#rqi-value').textContent='0.0';$('#rqi-badge-n').textContent=d.rqi.toFixed(1);
+ $('#road-recommendation').textContent=d.message;
+ $('#speed-value').textContent='0';$('#congestion-level').textContent=d.congestion;
+ [1,2,3].forEach(n=>{const s=$('#cong-bar-'+n);s.classList.toggle('is-lit',n<=d.congLevel)});
+ const im=mediaEl(d,$('#result-media-container'));
+ if(d.mode==='live'&&d.detections&&d.detections.length&&im&&!d.isVideo){lastDet=d.detections;im.complete?drawRet(im,$('#res-ret'),lastDet):im.addEventListener('load',()=>drawRet(im,$('#res-ret'),lastDet))}
+ const live=d.mode==='live';
+ $('#tel-t').textContent=live?'Extracted Telemetry':'Log';
+ $('#tel-s').textContent=live?'Values returned by the analysis service.':'All the steps calculated in the road analysis process.';
+ $('#terminal-stream').innerHTML='';
+ updateReportButtonVisibility(d.congestion);
+ ['#speed-bar'].forEach(s=>gsap.set(s,{scaleX:0}));ic()}
+function updateReportButtonVisibility(c){const on=c==='Medium'||c==='Moderate'||c==='High';['#report-btn','#report-btn-s'].forEach(s=>{$(s).style.display=on?'inline-flex':'none'})}
+function runGauge(value){
+ const v=Math.max(0,Math.min(10,value)),angle=-90+(v/10)*180,num={n:0};
+ gsap.set('#needle',{rotation:-90,svgOrigin:'120 120'});
+ gsap.to('#needle',{rotation:angle,svgOrigin:'120 120',duration:reduce?0:1.6,ease:'power3.out'});
+ gsap.to('#gaugeArc',{strokeDashoffset:100-v*10,duration:reduce?0:1.6,ease:'power3.out'});
+ gsap.to(num,{n:v,duration:reduce?0:1.6,ease:'power3.out',onUpdate:()=>{$('#rqi-value').textContent=num.n.toFixed(1)}})}
+function playResults(d){
+ const sec=V.results,b=$('#rqi-badge').getBoundingClientRect(),s=sec.getBoundingClientRect();
+ const cx=b.left+b.width/2-s.left,cy=b.top+b.height/2-s.top,R=Math.hypot(Math.max(cx,s.width-cx),Math.max(cy,s.height-cy));
+ const tl=gsap.timeline({defaults:{ease:'expo.out'}}),flood=$('.flood');
+ if(reduce||(navigator.hardwareConcurrency||8)<=4)tl.fromTo(flood,{autoAlpha:0},{autoAlpha:1,duration:.3},0);
+ else tl.fromTo(flood,{clipPath:'circle(0px at '+cx+'px '+cy+'px)'},{clipPath:'circle('+R+'px at '+cx+'px '+cy+'px)',duration:.8,ease:'power3.inOut'},0);
+ tl.from('.res-eyebrow',{y:10,autoAlpha:0,duration:.5},.15)
+  .from('#road-status-title',{yPercent:110,duration:.9},.2)
+  .add(()=>runGauge(d.rqi),.3)
+  .from('.res-actions > *',{y:14,autoAlpha:0,scale:.96,stagger:.08,duration:.6,ease:'back.out(1.5)'},.45)
+  .from('.is-above',{y:24,autoAlpha:0,stagger:.08,duration:.7},.7)
+  .add(()=>{$('#res-laser').classList.add('run');countTo($('#speed-value'),d.speedKmh,0,1.4);gsap.to('#speed-bar',{scaleX:Math.min(1,d.speedKmh/80),duration:reduce?0:1,ease:'power2.out'});gsap.to('.seg.is-lit i',{scaleX:1,stagger:.15,duration:reduce?0:.5,ease:'power2.out'})},.75)
+  .from('.badge-stamp',{scale:1.5,rotation:-14,autoAlpha:0,duration:.5,ease:'back.out(1.8)'},.85)
+  .add(()=>{lazy('tel',bTel);lazy('radar',bRadar);lazy('donut',bDonut);lazy('line',bLine);lazy('infra',bInfra);lazy('risk',bRisk);lazy('bar',bBar)},1);
+ watchActions()}
+function lazy(id,fn){
+ const el=$('#p-'+id);let done=false;gsap.set(el,{autoAlpha:0,y:24});
+ const run=()=>{if(done)return;done=true;gsap.to(el,{autoAlpha:1,y:0,duration:reduce?0:.6,ease:'expo.out'});queue(()=>fn(cur))};
+ if(hasST)trigs.push(ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:run}));
+ else if('IntersectionObserver' in window){const o=new IntersectionObserver(es=>{if(es[0].isIntersecting){o.disconnect();run()}},{rootMargin:'0px 0px -10% 0px'});o.observe(el);obs.push(o)}
+ else run()}
+function noChart(id){const c=$(id);if(c&&c.parentNode)c.parentNode.insertAdjacentHTML('beforeend','<p class="note" style="position:absolute;inset:0">Chart unavailable.</p>')}
+const T_OPT=()=>({backgroundColor:'#09090B',titleColor:'#fff',bodyColor:'#fff',titleFont:{family:'"Geist Mono",monospace',size:12},bodyFont:{family:'"Geist Mono",monospace',size:12},cornerRadius:8,padding:10});
+function bTel(d){
+ const live=d.mode==='live',L=[];
+ if(!live)L.push('[ENGINE] Road analysis started.','[FILE] Name, type and size read.','[SCORE] Sample RQI set to '+d.rqi.toFixed(1)+'.','[SPEED] Sample speed set to '+d.speedKmh+' km/h.','[STATUS] Sample analysis complete.');
+ else{L.push('[SCORE] RQI '+d.rqi.toFixed(1)+' of 10.','[SPEED] Estimated speed '+d.speedKmh+' km/h.');
+  if(d.damageCounts)L.push('[FINDINGS] '+Object.keys(d.damageCounts).map(k=>k+' '+d.damageCounts[k]).join(', ')+'.');
+  if(d.drivers)d.drivers.slice(0,3).forEach(x=>L.push('[DRIVER] '+x.feature+' ('+x.contribution+')'));L.push('[STATUS] Analysis complete.')}
+ const box=$('#terminal-stream');box.innerHTML='';
+ const els=L.map(t=>{const e=h('div');const i=t.indexOf(']')+1;e.appendChild(h('b',null,t.slice(0,i)));e.appendChild(document.createTextNode(t.slice(i)));box.appendChild(e);return e});
+ gsap.from(els,{autoAlpha:0,y:6,stagger:reduce?0:.12,duration:reduce?0:.3})}
+function bRadar(d){
+ if(typeof Chart==='undefined')return noChart('#radarChart');
+ const live=d.mode==='live',t=tone(),pre=[[9.1,8.8,7.9,9.4,8.5],[6.2,5.8,6.9,5.4,6.8],[2.8,3.2,4.1,2.5,3.4]][d.congLevel-1];
+ const vals=live?[d.rqi,null,null,null,null,null]:[d.rqi].concat(pre);
+ $('#radar-note').textContent=live?'Only RQI is measured. The other axes are not measured.':'';
+ const ch=new Chart($('#radarChart'),{type:'radar',data:{labels:AX,datasets:[{data:live?vals:vals.map(()=>0),backgroundColor:hx(t,.18),borderColor:t,borderWidth:2,pointBackgroundColor:t,pointRadius:live?5:3,showLine:!live}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:reduce?false:{duration:900},plugins:{legend:{display:false},tooltip:T_OPT()},
+  scales:{r:{min:0,max:10,ticks:{stepSize:2,showLabelBackdrop:false,backdropColor:'transparent',callback:v=>v===10?'10':'',color:'#52525B',font:{family:'"Geist Mono",monospace',size:11}},grid:{color:'#E4E4E7'},angleLines:{color:'#E4E4E7'},pointLabels:{color:'#52525B',font:{size:12,weight:'600'}}}}}});
+ charts.radar=ch;if(!live){ch.data.datasets[0].data=vals;ch.update()}}
+function bDonut(d){
+ if(typeof Chart==='undefined')return noChart('#doughnutChart');
+ const L=['Intact','Minor wear','Cracking','Damaged'],C=['#10B981','#EAB308','#F97316','#EF4444'];let v=null;
+ if(d.mode==='demo')v=[[72,18,7,3],[45,30,18,7],[18,32,28,22]][d.congLevel-1];
+ else if(d.composition){const c=d.composition,a=[c.intact,c.minor_wear,c.cracking,c.damaged].map(Number),s=a.reduce((x,y)=>x+y,0);if(s>0)v=a.map(x=>Math.round(x/s*1000)/10)}
+ const lg=$('#doughnut-legend');lg.innerHTML='';
+ if(!v){$('#dn-c').textContent='-';$('#dn-l').textContent='Not measured';lg.appendChild(h('li',null,'Surface composition was not returned.'));
+  charts.donut=new Chart($('#doughnutChart'),{type:'doughnut',data:{labels:['Not measured'],datasets:[{data:[1],backgroundColor:['#E4E4E7'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'72%',animation:false,events:[],plugins:{legend:{display:false},tooltip:{enabled:false}}}});return}
+ const mx=v.indexOf(Math.max.apply(null,v));$('#dn-c').textContent=v[mx]+'%';$('#dn-l').textContent=L[mx];
+ const ch=new Chart($('#doughnutChart'),{type:'doughnut',data:{labels:L,datasets:[{data:v,backgroundColor:C,borderWidth:0,hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'72%',animation:reduce?false:{duration:1000},plugins:{legend:{display:false},tooltip:Object.assign(T_OPT(),{callbacks:{label:c=>' '+c.label+': '+c.parsed+'%'}})}}});
+ charts.donut=ch;
+ L.forEach((l,i)=>{const li=h('li');const sw=h('i');sw.style.background=C[i];li.appendChild(sw);li.appendChild(h('span',null,l));li.appendChild(h('span','num',v[i]+'%'));
+  const on=()=>{ch.setActiveElements([{datasetIndex:0,index:i}]);ch.update()},off=()=>{ch.setActiveElements([]);ch.update()};
+  li.addEventListener('pointerenter',on);li.addEventListener('pointerleave',off);lg.appendChild(li)})}
+function bLine(d){
+ if(typeof Chart==='undefined')return noChart('#lineChart');
+ const n=12,base=d.speedKmh,t=tone(),ctx=$('#lineChart').getContext('2d'),g=ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,hx(t,.2));g.addColorStop(1,hx(t,0));
+ const pts=Array.from({length:n},(_,i)=>Math.max(5,Math.round(base+(Math.random()-.5)*base*.35+Math.sin(i*.8)*base*.1)));
+ const dl=900/n,py=c=>c.index===0?c.chart.scales.y.getPixelForValue(0):c.chart.getDatasetMeta(c.datasetIndex).data[c.index-1].getProps(['y'],true).y;
+ const anim=reduce?false:{x:{type:'number',easing:'linear',duration:dl,from:NaN,delay(c){if(c.type!=='data'||c.xStarted)return 0;c.xStarted=true;return c.index*dl}},y:{type:'number',easing:'linear',duration:dl,from:py,delay(c){if(c.type!=='data'||c.yStarted)return 0;c.yStarted=true;return c.index*dl}}};
+ charts.line=new Chart($('#lineChart'),{type:'line',data:{labels:Array.from({length:n},(_,i)=>i*50+' m'),datasets:[{data:pts,borderColor:t,borderWidth:2.5,backgroundColor:g,fill:true,tension:.35,pointRadius:0,pointHoverRadius:5,pointBackgroundColor:t}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:anim,interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:Object.assign(T_OPT(),{callbacks:{label:c=>' '+c.parsed.y+' km/h'}})},
+  scales:{x:{grid:{display:false},ticks:{color:'#52525B',maxTicksLimit:6,font:{family:'"Geist Mono",monospace',size:11}}},y:{beginAtZero:true,grid:{color:'#E4E4E7'},ticks:{color:'#52525B',font:{family:'"Geist Mono",monospace',size:11}},title:{display:true,text:'km/h',color:'#52525B',font:{size:11}}}}}})}
+function bInfra(d){
+ const box=$('#infra-metrics');box.innerHTML='';const live=d.mode==='live',i=d.congLevel-1;
+ const rows=[['Roughness IRI',['1.8','4.3','8.7'][i],'m/km',[1.8,4.3,8.7][i]/10],['Cracking Index',['0.06','0.34','0.78'][i],'',[.06,.34,.78][i]],['Safety Score',['94','61','22'][i],'/ 100',[94,61,22][i]/100]];
+ rows.forEach(r=>{const row=h('div','mrow'),top=h('span',null,r[0]),val=h('span','num',live?'Not measured':r[1]+(r[2]?' '+r[2]:''));row.appendChild(top);row.appendChild(val);
+  if(!live){const tr=h('div','track l'),f=h('i');tr.appendChild(f);row.appendChild(tr);row.appendChild(h('span','tg','Demo'));gsap.to(f,{scaleX:Math.min(1,r[3]),duration:reduce?0:.9,ease:'power2.out'})}
+  box.appendChild(row)})}
+function bRisk(d){
+ const box=$('#risk-tags');box.innerHTML='';let tags=[],sum='';
+ if(d.mode==='demo'){const S=[{t:['Low Friction Risk','No Flooding','Good Visibility','Stable Subbase'],s:'All risk indicators within safe operational bounds. No urgent intervention required.'},{t:['Surface Fatigue','Minor Cracking','Moderate IRI','Weathering'],s:'Moderate risks detected. Schedule preventive maintenance to avoid escalation.'},{t:['Pothole Hazard','High IRI','Subbase Failure','Flooding Risk','Vehicle Damage'],s:'CRITICAL: Multiple high-severity risks detected. Immediate road closure evaluation recommended.'}][d.congLevel-1];tags=S.t;sum=S.s}
+ else{const dc=d.damageCounts;if(dc){if(dc.D40>0)tags.push('Pothole risk');Object.keys(dc).forEach(k=>{if(dc[k]>0)tags.push(k+' findings: '+dc[k])})}
+  if(d.composition){const c=d.composition;if(+c.damaged>0)tags.push('Damaged surface share: '+(+c.damaged<=1?Math.round(c.damaged*100):Math.round(c.damaged))+'%')}
+  if(d.drivers)d.drivers.slice(0,2).forEach(x=>tags.push(x.feature));
+  sum=d.drivers&&d.drivers.length?'Top score drivers: '+d.drivers.slice(0,3).map(x=>x.feature).join(', ')+'.':'Based on the findings returned by the analysis service.';
+  if(!tags.length)tags.push('No findings returned')}
+ tags.slice(0,6).forEach(t=>box.appendChild(h('span','rtag',t)));$('#risk-summary').textContent=sum;
+ gsap.from('.rtag',{scale:.8,autoAlpha:0,stagger:reduce?0:.06,duration:reduce?0:.4,ease:'back.out(1.5)'})}
+function bBar(d){
+ if(typeof Chart==='undefined')return noChart('#barChart');
+ let L=['Pothole Repair','Line Marking','Drainage','Signage','Resurfacing'],v;
+ if(d.mode==='demo'){v=[[1,2,8,3,1],[4,6,3,7,4],[9,7,2,8,9]][d.congLevel-1];$('#bar-tag').textContent='Sample'}
+ else{L=[];v=[];if(d.damageCounts&&d.damageCounts.D40!=null){L.push('Pothole Repair');v.push(Math.min(10,d.damageCounts.D40*2))}L.push('Resurfacing');v.push(Math.round((10-d.rqi)*10)/10);$('#bar-tag').textContent='Estimated'}
+ const col=v.map(x=>x>=7?'#EF4444':x>=5?'#F97316':x>=3?'#EAB308':'#10B981');
+ charts.bar=new Chart($('#barChart'),{type:'bar',data:{labels:L,datasets:[{data:v,backgroundColor:col,borderRadius:6,borderSkipped:false}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:reduce?false:{duration:900},layout:{padding:{right:30}},plugins:{legend:{display:false},tooltip:Object.assign(T_OPT(),{callbacks:{label:c=>' Priority: '+c.parsed.x+'/10'}})},
+  scales:{x:{min:0,max:10,grid:{color:'#E4E4E7'},ticks:{stepSize:2,color:'#52525B',font:{family:'"Geist Mono",monospace',size:11}}},y:{grid:{display:false},ticks:{autoSkip:false,color:'#52525B',font:{size:11}}}}},
+  plugins:[{id:'vl',afterDatasetsDraw(c){const x=c.ctx;x.save();x.font='600 11px "Geist Mono",monospace';x.fillStyle='#09090B';x.textBaseline='middle';c.getDatasetMeta(0).data.forEach((b,i)=>x.fillText(v[i],b.x+6,b.y));x.restore()}}]})}
+
+/* sticky action bar: shows when the header actions leave the viewport */
+let sio=null;
+function watchActions(){
+ const sb=$('#sbar');if(!('IntersectionObserver' in window))return;if(sio)sio.disconnect();
+ sio=new IntersectionObserver(es=>{const e=es[0];sb.classList.toggle('on',state==='results'&&!e.isIntersecting&&e.boundingClientRect.top<0)},{threshold:0});sio.observe($('.res-actions'));obs.push(sio)}
+
+function resetApp(){
+ if(state!=='results')return;
+ gsap.to('#results-section .pl',{y:12,autoAlpha:0,stagger:.04,duration:reduce?0:.3,onComplete:()=>{
+  destroyCharts();Q.length=0;trigs.forEach(t=>t.kill());trigs=[];obs.forEach(o=>o.disconnect());obs=[];sio=null;
+  $('#sbar').classList.remove('on');['#report-btn','#report-btn-s'].forEach(s=>{$(s).style.display='none'});
+  gsap.set('#results-section .pl',{clearProps:'all'});gsap.set('.flood',{clearProps:'all'});
+  $$('#results-section video').forEach(v=>v.pause());cleanup();cur=null;
+  goto('idle')}})}
+
+/* ---------- report modal ---------- */
+const M=$('#report-modal'),MP=$('.mp',M);let lastFocus=null,dirty=false;
+const REQUIRED=[['inp-address','Enter the street address'],['inp-city','Enter the city'],['inp-state','Select the state'],['inp-pin','Enter a 6-digit PIN code'],['inp-name','Enter your name']];
+function showForm(){$('#report-form-body').classList.remove('hidden');$('#foot-form').classList.remove('hidden');$('#complaint-output').classList.add('hidden');$('#foot-letter').classList.add('hidden');
+ $('#report-title').textContent='Report Road Damage';$('#report-sub').classList.remove('hidden');$('#report-error').classList.add('hidden')}
+function openReportModal(){
+ lastFocus=document.activeElement;dirty=false;showForm();
+ MP.style.setProperty('--tc',tone());
+ M.classList.remove('hidden');M.setAttribute('aria-hidden','false');root.classList.add('modal-open');if(lenis)lenis.stop();
+ gsap.fromTo(MP,{y:24,scale:.96,autoAlpha:0},{y:0,scale:1,autoAlpha:1,duration:reduce?0:.45,ease:'expo.out'});
+ gsap.fromTo('.grp',{y:12,autoAlpha:0},{y:0,autoAlpha:1,stagger:reduce?0:.06,duration:reduce?0:.4,delay:reduce?0:.1});
+ ic();$('#inp-address').focus();say('Report form opened.')}
+function closeReportModal(){
+ if(M.classList.contains('hidden'))return;
+ gsap.to(MP,{y:12,scale:.98,autoAlpha:0,duration:reduce?0:.25,ease:'power2.in',onComplete:()=>{
+  M.classList.add('hidden');M.setAttribute('aria-hidden','true');root.classList.remove('modal-open');if(lenis)lenis.start();
+  gsap.set(MP,{clearProps:'all'});if(lastFocus&&lastFocus.focus)lastFocus.focus()}})}
+$('#mbk').addEventListener('click',()=>{if(!dirty||!$('#complaint-output').classList.contains('hidden'))closeReportModal()});
+$('#report-form-body').addEventListener('input',e=>{dirty=true;const el=e.target;if(el.getAttribute('aria-invalid')==='true'){el.setAttribute('aria-invalid','false');const p=$('#'+el.id+'-err');if(p)p.textContent=''}});
+$('#report-form-body').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();finalizeReport()}});
+document.addEventListener('keydown',e=>{
+ const act=!LM.classList.contains('hidden')?LM:!M.classList.contains('hidden')?M:null;
+ if(!act)return;
+ if(e.key==='Escape'){act===LM?closeLib():closeReportModal();return}
+ if(e.key!=='Tab')return;
+ const f=$$('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])',act).filter(n=>!n.disabled&&n.offsetParent!==null),a=f[0],z=f[f.length-1];
+ if(!a)return;
+ if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}});
+function fieldError(el){let p=$('#'+el.id+'-err');if(!p){p=h('p','fe');p.id=el.id+'-err';el.insertAdjacentElement('afterend',p);el.setAttribute('aria-describedby',p.id)}return p}
+function validateForm(){
+ let first=null,n=0;
+ const chk=(id,msg,bad)=>{const el=$('#'+id);el.setAttribute('aria-invalid',String(bad));fieldError(el).textContent=bad?msg:'';if(bad){n++;if(!first)first=el}};
+ REQUIRED.forEach(r=>{const v=$('#'+r[0]).value.trim();chk(r[0],r[1],!v||(r[0]==='inp-pin'&&!/^[0-9]{6}$/.test(v)))});
+ const em=$('#inp-email').value.trim();chk('inp-email','Enter a valid email address',!!em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em));
+ const b=$('#report-error');b.classList.toggle('hidden',n===0);b.textContent=n?(n===1?'1 field needs attention.':n+' fields need attention.'):'';
+ if(first){first.focus();first.scrollIntoView({block:'center'});gsap.fromTo(first,{x:-4},{x:0,duration:reduce?0:.3,ease:'elastic.out(1,.5)'})}
+ return n===0}
+const AUTH={
+ 'National Highway':{to:'The Project Director / Regional Officer',dept:'National Highways Authority of India (NHAI)',nh:true,channel:'NHAI helpline 1033 or the CPGRAMS portal (pgportal.gov.in)'},
+ 'State Highway':{to:'The Chief Engineer (Roads)',dept:'State Public Works Department (PWD)',nh:false,channel:'CPGRAMS portal (pgportal.gov.in)'}};
+const AUTH_MUNI={to:'The Municipal Commissioner / Executive Engineer (Roads)',dept:'Municipal Corporation / Urban Local Body',nh:false,channel:'CPGRAMS portal (pgportal.gov.in)'};
+function finalizeReport(){
+ if(!validateForm()||!cur)return;
+ const btn=$('#fin-btn');btn.style.minWidth=btn.offsetWidth+'px';btn.disabled=true;btn.innerHTML='<span class="sp"></span><span>Generating</span>';
+ setTimeout(()=>{buildLetter();btn.disabled=false;btn.style.minWidth='';btn.innerHTML='<i data-lucide="send" class="go"></i><span>Finalize &amp; Generate Complaint</span>';ic()},reduce?0:750)}
+function buildLetter(){
+ const g=id=>$('#'+id).value.trim(),d=cur;
+ const addr=g('inp-address'),city=g('inp-city'),state_=g('inp-state'),pin=g('inp-pin'),name=g('inp-name'),district=g('inp-district')||city,phone=g('inp-phone')||'Not provided',email=g('inp-email')||'Not provided',notes=g('inp-notes'),roadtype=$('#inp-roadtype').value,since=$('#inp-since').value;
+ const today=new Date(),dateStr=today.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+ const ref='SADAKSENSE-'+today.getFullYear()+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0')+'-'+Math.floor(1000+Math.random()*9000);
+ const auth=AUTH[roadtype]||AUTH_MUNI;
+ const sev=d.tone==='critical'?'URGENT — CRITICAL ROAD DAMAGE REQUIRING IMMEDIATE ACTION':'NOTICE — MODERATE ROAD DETERIORATION REQUIRING MAINTENANCE';
+ const letter=`${ref}
+${dateStr}
+
+To,
+${auth.to},
+${auth.dept},
+${district}, ${state_}
+Submission channel: ${auth.channel}
+
+Subject: ${sev} — ${addr}, ${city} — ${pin}
+
+Respected Sir/Madam,
+
+I, ${name}, a citizen and road user, hereby submit this formal grievance regarding the severely deteriorated condition of the road located at:
+
+  Address    : ${addr}
+  City       : ${city}
+  District   : ${district}
+  State      : ${state_}
+  PIN Code   : ${pin}
+  Road Type  : ${roadtype}
+
+The damage has been observed for approximately ${since} and continues to worsen, posing a significant risk to the safety of pedestrians, cyclists, and motorists.
+
+— DIAGNOSTIC ANALYSIS (SadakSense AI Platform) —
+  Surface Condition : ${d.condition}
+  Road Quality Index: ${d.rqi.toFixed(1)} / 10
+  Estimated Safe Speed: ${d.speedKmh} km/h
+  Congestion Impact : ${d.congestion}
+  Assessment        : ${d.message}
+${notes?`\n  Additional Notes  : ${notes}`:''}
+
+Given the above findings, I respectfully request the competent authority to:
+
+  1. Conduct an immediate on-site inspection of the above-mentioned road.
+  2. Undertake emergency repair / pothole-filling works at the earliest.
+  3. Erect appropriate warning signage to alert road users until repairs are complete.
+  4. Provide a written response / acknowledgement of this complaint within 15 working days as mandated by the Right to Public Services Act.
+
+Failure to act on this complaint may result in escalation to the District Collector, State Grievance Cell, and the National Consumer Helpline.
+
+Complainant Details:
+  Name    : ${name}
+  Phone   : ${phone}
+  Email   : ${email}
+  Date    : ${dateStr}
+  Ref No. : ${ref}
+
+I hereby declare that the information provided above is true and accurate to the best of my knowledge.
+
+Yours sincerely,
+${name}
+${dateStr}
+
+— Generated by SadakSense | AI Road Infrastructure Analysis Platform —`.trim();
+ $('#complaint-ref').textContent=ref;$('#complaint-text').textContent=letter;
+ const info=$('#authority-info');info.innerHTML='';
+ const add=(html)=>{const p=h('p');p.innerHTML=html;info.appendChild(p)};
+ if(auth.nh)add('<b>NHAI helpline:</b> <a href="tel:1033">1033</a> (24x7; covers road conditions and potholes on National Highways)');
+ add('<b>CPGRAMS portal:</b> <a href="https://pgportal.gov.in" target="_blank" rel="noopener noreferrer">pgportal.gov.in</a>');
+ if(auth.nh)add('<b>NHAI Sukhad Yatra app</b>');else add('File this on pgportal.gov.in and select the state or the municipal body; verify the contact on the official site.');
+ add('Check the recipient on the official portal before sending.');
+ if(d.mode==='demo')add('<b>Sample values:</b> the diagnostic lines in this letter use sample values. Edit or remove them before sending.');
+ $('#report-form-body').classList.add('hidden');$('#foot-form').classList.add('hidden');$('#report-sub').classList.add('hidden');$('#report-error').classList.add('hidden');
+ $('#complaint-output').classList.remove('hidden');$('#foot-letter').classList.remove('hidden');
+ $('#report-title').textContent='Complaint Generated';$('#complaint-output').scrollTop=0;
+ gsap.fromTo('.paper',{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)',duration:reduce?0:.8,ease:'expo.out',clearProps:'clipPath'});
+ $('#report-title').focus();say('Complaint letter generated.');ic()}
+function copyComplaint(){
+ const ev=window.event,btn=(ev&&ev.currentTarget&&ev.currentTarget.nodeType===1)?ev.currentTarget:$('#copy-full'),text=$('#complaint-text').textContent;
+ const done=()=>{toast('Copied');btn.classList.add('is-copied');setTimeout(()=>btn.classList.remove('is-copied'),1500)};
+ const fb=()=>{const ta=h('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){toast('Copy failed. Select the text and copy it manually.')}document.body.removeChild(ta)};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,fb);else fb()}
+
+/* ---------- load choreography (L1 to L6) ---------- */
+if(!reduce){
+ const tl=gsap.timeline({defaults:{ease:'expo.out'}});
+ tl.from('#hdr',{yPercent:-100,duration:.6},0)
+  .from('.ttl .line > span',{yPercent:110,duration:1,stagger:.1},.1)
+  .from('.lead',{y:20,autoAlpha:0,duration:.8},.35)
+  .from('#dropzone',{y:24,autoAlpha:0,duration:.8},.45)
+  .from('.tile',{scale:.7,duration:.8,ease:'back.out(1.5)'},.7)
+  .from('.fmt span',{scale:.6,autoAlpha:0,stagger:.08,duration:.5,ease:'back.out(1.5)'},.8)}
+window.__ok=true;
+</script>
+</body>
+</html>

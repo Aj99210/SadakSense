@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SadakSense | Guide to every page</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F97316'/%3E%3Cpath d='M5.5 28 12.8 5.5h6.4L26.5 28h-5l-1.2-4h-8.6l-1.2 4z' fill='%2309090B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Hanken+Grotesk:wght@300..800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#09090B;--ink-2:#18181B;--ink-3:#27272A;--paper:#F4F4F5;--paper-2:#FAFAFA;--line:#E4E4E7;--mut-l:#52525B;--mut-d:#A1A1AA;--orange:#F97316;--brand:#EA580C;--deep:#C2410C;--wash:#FFF7ED;--crit:#EF4444;--mod:#EAB308;--good:#10B981;
+--rqi-ramp:linear-gradient(90deg,#EF4444 0%,#F97316 33%,#EAB308 55%,#10B981 100%);
+--f-disp:"Bricolage Grotesque","Arial Narrow",sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-acc:"Instrument Serif",Georgia,serif;--f-mono:"Geist Mono",ui-monospace,monospace;
+--sh-or:0 8px 24px -8px rgb(249 115 22/.55);--ease:cubic-bezier(.16,1,.3,1);--pad:clamp(1.25rem,4vw,3rem)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--f-body);font-size:1.0625rem;line-height:1.6;background:var(--paper);color:var(--ink);overflow-x:clip}
+a{color:inherit;text-decoration:none}
+svg{display:block}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--pad)}
+.acc{font-family:var(--f-acc);font-style:italic;font-weight:400;color:var(--orange);letter-spacing:0}
+.mono{font-family:var(--f-mono)}
+
+/* progress */
+#prog{position:fixed;left:0;top:0;height:4px;width:100%;background:var(--rqi-ramp);transform-origin:0 50%;transform:scaleX(0);z-index:60}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .4s,backdrop-filter .4s,border-color .4s;border-bottom:1px solid transparent}
+nav.solid{background:rgb(9 9 11/.78);backdrop-filter:blur(14px);border-color:rgb(255 255 255/.08)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:1rem}
+.logo{display:flex;align-items:center;gap:.6rem;font-family:var(--f-disp);font-weight:800;font-size:1.25rem;letter-spacing:-.02em;color:var(--paper)}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--orange);display:grid;place-items:center}
+.logo svg{width:16px;height:16px}
+.nl{display:flex;align-items:center;gap:1.75rem;color:var(--paper)}
+.nl a.t{font-weight:500;font-size:.96rem;opacity:.75;transition:opacity .3s}
+.nl a.t:hover{opacity:1}
+
+/* buttons */
+.btn{position:relative;overflow:clip;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.75rem 1.5rem;border-radius:999px;font-weight:600;font-size:.98rem;border:1px solid transparent;cursor:pointer;font-family:inherit;transition:background .3s,box-shadow .3s,color .3s,border-color .3s}
+.btn svg{width:16px;height:16px;transition:transform .4s var(--ease)}
+.btn:hover svg{transform:translate(2px,-2px)}
+.btn-p{background:var(--orange);color:var(--ink)}
+.btn-p:hover{background:var(--brand);box-shadow:var(--sh-or)}
+.btn-p::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgb(255 255 255/.5) 50%,transparent 70%);transform:translateX(-120%);animation:shine 3.6s 1.5s infinite}
+@keyframes shine{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.btn-g{border-color:rgb(255 255 255/.28);color:var(--paper)}
+.btn-g:hover{background:var(--paper);color:var(--ink)}
+.btn-gl{border-color:var(--ink);color:var(--ink)}
+.btn-gl:hover{background:var(--ink);color:var(--paper)}
+.btn-sm{min-height:42px;padding:.5rem 1.15rem;font-size:.92rem}
+
+/* hero */
+.hero{position:relative;background:var(--ink);color:var(--paper);min-height:100svh;padding:132px 0 110px;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse 55% 60% at 78% 45%,rgb(249 115 22/.22),transparent 70%),linear-gradient(rgb(255 255 255/.04) 1px,transparent 1px) 0 0/64px 64px,linear-gradient(90deg,rgb(255 255 255/.04) 1px,transparent 1px) 0 0/64px 64px;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+.road{position:absolute;left:0;right:0;bottom:0;height:70px;z-index:-1;background:var(--ink-2);border-top:1px solid rgb(255 255 255/.08)}
+.road::after{content:"";position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:repeating-linear-gradient(90deg,var(--orange) 0 56px,transparent 56px 112px);animation:lane 1.4s linear infinite}
+@keyframes lane{to{background-position:112px 0}}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:.6rem;border:1px solid rgb(255 255 255/.18);border-radius:999px;padding:.4rem 1rem;font-size:.92rem;color:var(--paper);background:rgb(255 255 255/.04)}
+.badge i{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgb(16 185 129/.7);animation:ping 1.8s infinite}
+@keyframes ping{to{box-shadow:0 0 0 12px rgb(16 185 129/0)}}
+h1{font-family:var(--f-disp);font-weight:800;font-stretch:80%;font-size:clamp(3rem,1rem + 6.6vw,7rem);line-height:.95;letter-spacing:-.035em;margin-top:1.5rem}
+.line{display:block;overflow:hidden;padding-bottom:.1em;margin-bottom:-.1em}
+.line__in{display:block}
+.uwrap{position:relative;display:inline-block}
+.uwrap svg{position:absolute;left:0;bottom:-.12em;width:100%;height:.2em;overflow:visible}
+.hero-lead{font-size:clamp(1.075rem,1rem + .45vw,1.35rem);color:var(--mut-d);max-width:50ch;margin-top:1.75rem}
+.hero-lead b{color:var(--paper);font-weight:600}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2.25rem}
+
+/* hub */
+#hub{width:100%;max-width:580px;height:auto;margin-inline:auto;overflow:visible}
+.ln{stroke:rgb(255 255 255/.28);stroke-width:1.5;stroke-dasharray:4 8;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.node{cursor:pointer}
+.node rect{fill:var(--ink-2);stroke:rgb(255 255 255/.22);stroke-width:1.5;transition:fill .3s,stroke .3s}
+.node text{font:600 14px var(--f-body);fill:var(--paper);transition:fill .3s;pointer-events:none}
+.node .h{transform-box:fill-box;transform-origin:center;transition:transform .45s var(--ease)}
+.node:hover .h,.node:focus-visible .h{transform:scale(1.1)}
+.node:hover rect,.node:focus-visible rect{fill:var(--orange);stroke:var(--orange)}
+.node:hover text,.node:focus-visible text{fill:var(--ink)}
+.node:focus-visible{outline:none}
+.cen .r{fill:none;stroke:var(--orange);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:ring 2.8s ease-out infinite}
+@keyframes ring{from{transform:scale(1);opacity:.7}to{transform:scale(1.8);opacity:0}}
+.cen .spin{transform-box:fill-box;transform-origin:center;animation:spin 28s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cen .gt{fill:var(--ink);text-anchor:middle;pointer-events:none}
+.cen .pt{fill:var(--paper);text-anchor:middle;pointer-events:none}
+
+/* directory */
+.dir{padding:clamp(4.5rem,3rem + 6vw,9rem) 0 clamp(3rem,2rem + 4vw,6rem)}
+h2{font-family:var(--f-disp);font-weight:800;font-stretch:85%;font-size:clamp(2.2rem,1.2rem + 4vw,4.6rem);line-height:1;letter-spacing:-.03em}
+.dir-head{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:end;margin-bottom:2.5rem}
+.dir-head p{color:var(--mut-l);max-width:46ch;justify-self:end}
+.dir-head h2 .acc{color:var(--brand)}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:.9rem}
+.chip{padding:.55rem 1.05rem;border-radius:999px;border:1px solid var(--line);background:var(--paper-2);font:500 .94rem var(--f-body);cursor:pointer;transition:all .3s var(--ease)}
+.chip:hover{border-color:var(--brand);transform:translateY(-2px)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ans{min-height:3.2rem;color:var(--mut-l);margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center}
+.ans b{color:var(--ink)}
+.rows{border-top:1px solid var(--ink)}
+.row{position:relative;display:grid;grid-template-columns:200px 1fr 1.3fr 48px;gap:1.5rem;align-items:center;padding:1.6rem 1.25rem;border-bottom:1px solid var(--line);overflow:hidden;isolation:isolate}
+.row::before{content:"";position:absolute;inset:0;background:var(--orange);transform:translateY(101%);transition:transform .55s var(--ease);z-index:-1}
+.row:hover::before,.row:focus-visible::before,.row.hl::before{transform:none}
+.row .file{font-family:var(--f-mono);font-size:.85rem;color:var(--deep);transition:color .3s}
+.row .name{font-family:var(--f-disp);font-weight:700;font-stretch:90%;font-size:clamp(1.5rem,1.1rem + 1.4vw,2.3rem);letter-spacing:-.025em;line-height:1.05}
+.row .d{color:var(--mut-l);transition:color .3s}
+.row .arr{width:44px;height:44px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;transition:background .3s,color .3s,transform .5s var(--ease)}
+.row .arr svg{width:18px;height:18px}
+.row:hover .file,.row:hover .d,.row.hl .d,.row.hl .file{color:var(--ink)}
+.row:hover .arr,.row.hl .arr{background:var(--ink);color:var(--orange);transform:rotate(45deg)}
+.soon{font-family:var(--f-mono);font-size:.7rem;background:var(--wash);color:var(--deep);border:1px solid #FED7AA;border-radius:99px;padding:.1rem .55rem;margin-left:.5rem;vertical-align:middle}
+
+/* route stack */
+.route{background:var(--ink);color:var(--paper);padding:clamp(4.5rem,3rem + 6vw,9rem) 0 clamp(5rem,4rem + 6vw,10rem)}
+.route-head{max-width:52ch;margin-bottom:3.5rem}
+.route-head p{color:var(--mut-d);margin-top:1rem}
+.stack{display:grid;gap:0}
+.sc{position:sticky;top:calc(9svh + var(--i)*20px);margin-bottom:7vh}
+.sc-in{background:var(--ink-2);border-radius:32px;padding:10px;box-shadow:0 0 0 1px rgb(255 255 255/.08),0 30px 60px -20px rgb(0 0 0/.8),inset 0 1px 0 rgb(255 255 255/.06)}
+.sc-body{display:grid;grid-template-columns:1fr 1.1fr;gap:1rem;min-height:min(460px,70svh)}
+.sc-txt{padding:clamp(1.5rem,1rem + 2vw,3rem);display:flex;flex-direction:column;justify-content:space-between;gap:1.5rem}
+.num{font-family:var(--f-disp);font-weight:800;font-stretch:80%;font-size:clamp(4rem,2rem + 6vw,8rem);line-height:.8;color:var(--orange);letter-spacing:-.05em}
+.sc-txt h3{font-family:var(--f-disp);font-weight:700;font-size:clamp(1.8rem,1.2rem + 1.8vw,3rem);letter-spacing:-.03em;line-height:1}
+.sc-txt p{color:var(--mut-d);max-width:42ch;margin:.9rem 0 1.5rem}
+.sc-txt .file{font-family:var(--f-mono);font-size:.82rem;color:var(--orange)}
+.vis{position:relative;border-radius:24px;background:var(--ink);border:1px solid rgb(255 255 255/.07);overflow:hidden;min-height:260px;display:grid;place-items:center;padding:1.5rem}
+.tag{position:absolute;top:14px;right:14px;font-family:var(--f-mono);font-size:.7rem;color:var(--mut-d);border:1px solid rgb(255 255 255/.16);border-radius:99px;padding:.15rem .6rem}
+
+/* v1 photo */
+.photo{position:relative;width:100%;max-width:420px;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:linear-gradient(#3F3F46,#27272A 45%,#1c1c1f);border:1px solid rgb(255 255 255/.1)}
+.photo::before{content:"";position:absolute;left:50%;bottom:-10%;width:6px;height:120%;margin-left:-3px;background:repeating-linear-gradient(to bottom,#EAB308 0 26px,transparent 26px 52px);transform:perspective(200px) rotateX(55deg);transform-origin:bottom;opacity:.7}
+.pit{position:absolute;border-radius:50%;background:radial-gradient(#050506 40%,#18181B);box-shadow:inset 0 0 0 2px #0a0a0b}
+.box{position:absolute;border:2px solid var(--orange);border-radius:8px;opacity:0}
+.box span{position:absolute;left:-2px;top:-24px;background:var(--orange);color:var(--ink);font:500 .68rem var(--f-mono);padding:.1rem .45rem;border-radius:5px 5px 5px 0}
+.scan{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--orange),transparent);box-shadow:0 0 18px var(--orange);animation:scan 3.2s ease-in-out infinite}
+@keyframes scan{0%,100%{top:2%}50%{top:96%}}
+.score{position:absolute;left:14px;bottom:14px;background:rgb(9 9 11/.85);border:1px solid rgb(255 255 255/.14);border-radius:12px;padding:.5rem .9rem;font-family:var(--f-disp);font-weight:800;font-size:1.8rem;line-height:1}
+.score small{font-size:.8rem;color:var(--mut-d);font-weight:500}
+
+/* v2 ranked */
+.rank{width:100%;max-width:400px;display:grid;gap:1rem}
+.rk{display:grid;gap:.4rem}
+.rk div.t{display:flex;justify-content:space-between;font-size:.92rem}
+.rk .t span:last-child{font-family:var(--f-mono);color:var(--mut-d)}
+.bar{height:10px;border-radius:99px;background:var(--ink-3);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px}
+
+/* v3 map */
+.map{width:100%;max-width:440px;height:auto}
+.dot{transform-box:fill-box;transform-origin:center}
+.dot.p{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.7);opacity:.5}}
+
+/* v4 before after */
+.ba{width:100%;max-width:400px;display:grid;gap:1.4rem}
+.ba .lab{display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.92rem}
+.ba .lab b{font-family:var(--f-mono);font-weight:500}
+.ver{justify-self:start;display:inline-flex;gap:.5rem;align-items:center;background:rgb(16 185 129/.14);color:#6EE7B7;border:1px solid rgb(16 185 129/.4);border-radius:99px;padding:.4rem .9rem;font-weight:600;font-size:.92rem;opacity:0}
+.ver svg{width:16px;height:16px}
+
+/* cta */
+.cta{padding:clamp(4rem,3rem + 5vw,8rem) 0 clamp(3rem,2rem + 3vw,5rem);background:var(--wash);overflow:hidden}
+.marq{display:flex;width:max-content;animation:marq 32s linear infinite;font-family:var(--f-disp);font-weight:800;font-stretch:80%;font-size:clamp(3.5rem,2rem + 9vw,10rem);line-height:1;letter-spacing:-.04em;white-space:nowrap}
+.marq span{padding-right:.5em}
+.marq .acc{color:var(--brand)}
+@keyframes marq{to{transform:translateX(-50%)}}
+.cta-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:3rem;align-items:center}
+.cta-row p{color:var(--mut-l);margin-left:auto;max-width:44ch;font-size:.95rem}
+
+@media(max-width:960px){.hero-grid{grid-template-columns:1fr}.nl a.t{display:none}.dir-head{grid-template-columns:1fr}.dir-head p{justify-self:start}.row{grid-template-columns:1fr 44px;gap:.4rem 1rem}.row .file{grid-column:1/2}.row .name{grid-column:1/2}.row .d{grid-column:1/2}.row .arr{grid-column:2;grid-row:1/4;align-self:center}.sc{position:relative;top:0;margin-bottom:1.25rem}.sc-body{grid-template-columns:1fr}.cta-row p{margin-left:0}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="logo" href="landing.html" aria-label="SadakSense home"><i><svg viewBox="0 0 32 32"><path d="M5.5 28 12.8 5.5h6.4L26.5 28h-5l-1.2-4h-8.6l-1.2 4z" fill="#09090B"/></svg></i>SadakSense</a>
+    <div class="nl">
+      <a class="t" href="#pages">All pages</a>
+      <a class="t" href="#route">Demo route</a>
+      <a class="btn btn-p btn-sm" href="landing.html" data-mag>Back to landing</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="badge"><i></i>This page links to all 7 pages</span>
+      <h1>
+        <span class="line"><span class="line__in">Every page,</span></span>
+        <span class="line"><span class="line__in"><span class="uwrap"><span class="acc">one click</span><svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path id="ul" d="M2 8 C40 2 90 11 130 5 S185 6 198 4" fill="none" stroke="#F97316" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke" pathLength="1"/></svg></span> away.</span></span>
+      </h1>
+      <p class="hero-lead"><b>This guide is the map of SadakSense.</b> Every page we built is linked here: the map on the right, the full list below, and a four-stop demo route. Click any bubble to jump straight in.</p>
+      <div class="hero-cta">
+        <a class="btn btn-p" href="#pages" data-mag>See all pages <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+        <a class="btn btn-g" href="#route" data-mag>Follow the demo route</a>
+      </div>
+    </div>
+    <svg id="hub" viewBox="0 0 560 560" role="group" aria-label="Map of every SadakSense page"></svg>
+  </div>
+  <div class="road" aria-hidden="true"></div>
+</header>
+
+<section class="dir" id="pages" aria-labelledby="dh">
+  <div class="wrap">
+    <div class="dir-head">
+      <h2 id="dh">All 7 pages, <span class="acc">listed.</span></h2>
+      <p>Nothing is hidden. Every page in the project has a row here. Not sure where to go? Pick what you want to do.</p>
+    </div>
+    <div class="chips" role="group" aria-label="Pick a goal">
+      <button class="chip" data-k="main.html" data-t="Start with the analyzer. Upload a photo or video and get a score.">Check a road photo or video</button>
+      <button class="chip" data-k="city.html" data-t="The city command view shows the whole network and what needs attention first.">See the city at a glance</button>
+      <button class="chip" data-k="heatmap.html" data-t="The heatmap colours every stretch by quality. Red is worst.">Find the worst roads</button>
+      <button class="chip" data-k="mistri.html" data-t="Create a repair job and send it to a local mistri.">Get a road fixed</button>
+      <button class="chip" data-k="game.html" data-t="See road conditions in 3D. The reconstruction page rebuilds a street from images too.">See it in 3D</button>
+    </div>
+    <div class="ans" id="ans" aria-live="polite">Pick a goal and the right row lights up.</div>
+
+    <div class="rows">
+      <a class="row" href="landing.html" data-label="Landing"><span class="file">landing.html</span><span class="name">Landing</span><span class="d">The full story of SadakSense in one scroll.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="main.html" data-label="Analyzer"><span class="file">main.html</span><span class="name">Analyzer</span><span class="d">Upload a road photo or video. Get potholes, a quality score (RQI) and the risks found.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="city.html" data-label="City command"><span class="file">city.html</span><span class="name">City command</span><span class="d">The road network at city scale: worst stretches, trends and what to fix first.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="heatmap.html" data-label="Heatmap"><span class="file">heatmap.html</span><span class="name">Heatmap</span><span class="d">A live map coloured by road quality. Click a stretch for its score, charts and alerts.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="game.html" data-label="3D visualizer"><span class="file">game.html</span><span class="name">3D visualizer</span><span class="d">See road conditions in three dimensions, from smooth to badly damaged.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="spatial.html" data-label="3D rebuild"><span class="file">spatial.html</span><span class="name">3D rebuild</span><span class="d">Reconstruct a street scene in 3D from images.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+      <a class="row" href="mistri.html" data-label="Mistri"><span class="file">mistri.html</span><span class="name">Mistri<span class="soon">being added</span></span><span class="d">Turn a bad stretch into a repair job. A contractor fixes it and SadakSense re-scores the road to confirm.</span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+    </div>
+  </div>
+</section>
+
+<section class="route" id="route" aria-labelledby="rh">
+  <div class="wrap">
+    <div class="route-head">
+      <h2 id="rh">The demo route, <span class="acc">in four stops</span></h2>
+      <p>Short on time? Follow these four pages in order and you’ve seen the whole idea, from one pothole to a repaired street.</p>
+    </div>
+    <div class="stack">
+
+      <article class="sc" style="--i:0"><div class="sc-in"><div class="sc-body">
+        <div class="sc-txt"><div class="num">1</div><div><h3>Analyze a road</h3><p>Upload a photo or video. SadakSense finds the damage and scores the road.</p><a class="btn btn-p" href="main.html" data-mag>Open the analyzer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div></div>
+        <div class="vis" id="v1"><span class="tag">Sample</span>
+          <div class="photo"><div class="pit" style="left:22%;top:58%;width:22%;height:14%"></div><div class="pit" style="left:60%;top:70%;width:16%;height:10%"></div>
+            <div class="box" style="left:19%;top:52%;width:28%;height:26%"><span>pothole</span></div><div class="box" style="left:57%;top:64%;width:22%;height:22%"><span>pothole</span></div>
+            <div class="scan"></div><div class="score"><span id="s1">0.0</span><small> / 10 RQI</small></div></div>
+        </div>
+      </div></div></article>
+
+      <article class="sc" style="--i:1"><div class="sc-in"><div class="sc-body">
+        <div class="sc-txt"><div class="num">2</div><div><h3>See the city</h3><p>Zoom out to the whole network and see which stretches need attention first.</p><a class="btn btn-p" href="city.html" data-mag>Open city command <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div></div>
+        <div class="vis" id="v2"><span class="tag">Sample</span>
+          <div class="rank">
+            <div class="rk"><div class="t"><span>Worst stretch</span><span>2.1</span></div><div class="bar"><i data-w="21" style="background:#EF4444"></i></div></div>
+            <div class="rk"><div class="t"><span>Second worst</span><span>3.4</span></div><div class="bar"><i data-w="34" style="background:#F97316"></i></div></div>
+            <div class="rk"><div class="t"><span>Needs watching</span><span>5.2</span></div><div class="bar"><i data-w="52" style="background:#EAB308"></i></div></div>
+            <div class="rk"><div class="t"><span>Healthy</span><span>8.6</span></div><div class="bar"><i data-w="86" style="background:#10B981"></i></div></div>
+          </div>
+        </div>
+      </div></div></article>
+
+      <article class="sc" style="--i:2"><div class="sc-in"><div class="sc-body">
+        <div class="sc-txt"><div class="num">3</div><div><h3>Read the heatmap</h3><p>Every stretch is coloured by quality. Click one to see its score and alerts.</p><a class="btn btn-p" href="heatmap.html" data-mag>Open the heatmap <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div></div>
+        <div class="vis" id="v3"><span class="tag">Sample</span>
+          <svg class="map" id="map" viewBox="0 0 440 300" aria-hidden="true">
+            <path d="M0 210 C90 190 150 120 240 130 S380 60 440 40" fill="none" stroke="#3F3F46" stroke-width="3"/>
+            <path d="M60 300 C100 220 180 200 220 140 S300 60 330 0" fill="none" stroke="#3F3F46" stroke-width="3"/>
+            <path d="M0 80 C100 100 200 70 300 180 S400 250 440 260" fill="none" stroke="#3F3F46" stroke-width="3"/>
+          </svg>
+        </div>
+      </div></div></article>
+
+      <article class="sc" style="--i:3"><div class="sc-in"><div class="sc-body">
+        <div class="sc-txt"><div class="num">4</div><div><h3>Send a mistri</h3><p>Turn a bad stretch into a repair job. After the fix, the road is re-scored to prove it worked.</p><a class="btn btn-p" href="mistri.html" data-mag>Open Mistri <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div></div>
+        <div class="vis" id="v4"><span class="tag">Sample</span>
+          <div class="ba">
+            <div><div class="lab"><span>Before repair</span><b id="b1">0.0</b></div><div class="bar"><i data-w="31" style="background:#EF4444"></i></div></div>
+            <div><div class="lab"><span>After repair</span><b id="b2">0.0</b></div><div class="bar"><i data-w="74" style="background:#10B981"></i></div></div>
+            <span class="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>Fix verified</span>
+          </div>
+        </div>
+      </div></div></article>
+
+    </div>
+  </div>
+</section>
+
+<section class="cta" aria-label="Start exploring">
+  <div class="marq" aria-hidden="true">
+    <span>Analyze roads. <span class="acc">Map the damage.</span> Send a mistri.</span><span>Analyze roads. <span class="acc">Map the damage.</span> Send a mistri.</span>
+  </div>
+  <div class="wrap">
+    <div class="cta-row">
+      <a class="btn btn-p" href="main.html" data-mag>Open the analyzer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+      <a class="btn btn-gl" href="landing.html" data-mag>Back to landing</a>
+      <p>Some pages use sample data. It’s marked “Sample” wherever it appears.</p>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg',$=function(s,c){return (c||document).querySelector(s)},$$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
+  var G=window.gsap,ST=window.ScrollTrigger;
+  if(G&&ST)G.registerPlugin(ST);
+
+  /* nav + progress */
+  var nav=$('#nav'),prog=$('#prog');
+  function sc(){var y=window.scrollY,h=document.documentElement.scrollHeight-innerHeight;nav.classList.toggle('solid',y>40);prog.style.transform='scaleX('+(h>0?y/h:0)+')'}
+  addEventListener('scroll',sc,{passive:true});sc();
+
+  /* hub built from the directory rows, so every page is always linked */
+  var hub=$('#hub');
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+  var rows=$$('.row'),lg=el('g',{},hub),ng=el('g',{},hub);
+  rows.forEach(function(r,i){
+    var ang=-Math.PI/2+i*2*Math.PI/rows.length,x=280+205*Math.cos(ang),y=280+205*Math.sin(ang);
+    el('line',{x1:280,y1:280,x2:x,y2:y,'class':'ln'},lg);
+    var a=el('a',{href:r.getAttribute('href'),'class':'node','aria-label':'Open '+r.dataset.label},ng);
+    var o=el('g',{transform:'translate('+x+' '+y+')'},a),n=el('g',{'class':'n'},o),h=el('g',{'class':'h'},n);
+    el('rect',{x:-69,y:-21,width:138,height:42,rx:21},h);
+    el('text',{'text-anchor':'middle',y:5},h).textContent=r.dataset.label;
+    a.addEventListener('mouseenter',function(){r.classList.add('hl')});
+    a.addEventListener('mouseleave',function(){r.classList.remove('hl')});
+  });
+  var defs=el('defs',{},hub);
+  var g1=el('radialGradient',{id:'cg',cx:'50%',cy:'30%',r:'80%'},defs);
+  el('stop',{offset:'0','stop-color':'#FDBA74'},g1);el('stop',{offset:'.5','stop-color':'#F97316'},g1);el('stop',{offset:'1','stop-color':'#C2410C'},g1);
+  var g2=el('radialGradient',{id:'cglow'},defs);
+  el('stop',{offset:'0','stop-color':'#F97316','stop-opacity':'.38'},g2);el('stop',{offset:'1','stop-color':'#F97316','stop-opacity':'0'},g2);
+  var c=el('g',{'class':'cen'},hub),M=280;
+  el('circle',{cx:M,cy:M,r:100,fill:'url(#cglow)'},c);
+  el('circle',{'class':'r',cx:M,cy:M,r:50},c);
+  el('circle',{'class':'spin',cx:M,cy:M,r:66,fill:'none',stroke:'#F97316','stroke-width':2,'stroke-dasharray':'1 11','stroke-linecap':'round'},c);
+  el('circle',{cx:M,cy:M,r:50,fill:'url(#cg)'},c);
+  el('circle',{cx:M,cy:M,r:50,fill:'none',stroke:'rgba(255,255,255,.4)','stroke-width':1.2},c);
+  var mk=el('g',{},c);
+  el('path',{d:'M276 238 L284 238 L304 280 L256 280 Z',fill:'#09090B',stroke:'#09090B','stroke-width':5,'stroke-linejoin':'round'},mk);
+  [[243,248,2],[254,261,3.2],[269,279,4.6]].forEach(function(d){el('line',{x1:M,y1:d[0],x2:M,y2:d[1],stroke:'#FDBA74','stroke-width':d[2],'stroke-linecap':'round'},mk)});
+  var gt=el('text',{'class':'gt',x:M,y:M+27,style:'font:800 17px '+getComputedStyle(document.body).getPropertyValue('--f-disp')},c);gt.textContent='Guide';
+  var pill=el('g',{},c);
+  el('rect',{x:M-60,y:M+80,width:120,height:28,rx:14,fill:'#18181B',stroke:'rgba(255,255,255,.2)','stroke-width':1.2},pill);
+  el('circle',{cx:M-42,cy:M+94,r:4,fill:'#10B981'},pill);
+  var pt=el('text',{'class':'pt',x:M+9,y:M+98,style:'font:600 12px '+getComputedStyle(document.body).getPropertyValue('--f-body')},pill);pt.textContent='You are here';
+
+  /* goal chips */
+  var ans=$('#ans'),chips=$$('.chip');
+  chips.forEach(function(ch){ch.setAttribute('aria-pressed','false');ch.addEventListener('click',function(){
+    chips.forEach(function(x){x.setAttribute('aria-pressed',x===ch?'true':'false')});
+    rows.forEach(function(r){r.classList.toggle('hl',r.getAttribute('href')===ch.dataset.k)});
+    ans.innerHTML='<b>'+ch.textContent+'.</b> '+ch.dataset.t;
+  })});
+
+  /* magnetic buttons */
+  if(matchMedia('(hover:hover)').matches)$$('[data-mag]').forEach(function(b){
+    b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.22)+'px,'+((e.clientY-r.top-r.height/2)*.3)+'px)'});
+    b.addEventListener('mouseleave',function(){b.style.transform='';b.style.transition='transform .5s cubic-bezier(.16,1,.3,1)';setTimeout(function(){b.style.transition=''},500)});
+  });
+
+  /* map dots for stop 3 */
+  var map=$('#map'),cols=['#EF4444','#F97316','#EAB308','#10B981'],seed=7;
+  function rnd(){seed=(seed*9301+49297)%233280;return seed/233280}
+  var pts=[[40,205],[120,175],[190,140],[260,128],[330,92],[400,50],[90,262],[140,205],[200,160],[250,100],[305,40],[40,92],[130,98],[220,86],[290,160],[340,215],[410,250],[160,60],[370,140],[70,150]];
+  pts.forEach(function(p,i){var k=i%4===0?0:i%3===0?1:i%2===0?2:3;var d=el('circle',{'class':'dot'+(k===0?' p':''),cx:p[0],cy:p[1],r:k===0?9:7,fill:cols[k],opacity:.9},map);d.style.animationDelay=(rnd()*1.5)+'s'});
+
+  /* animations (page still works if GSAP does not load) */
+  if(!G){$$('.bar i').forEach(function(i){i.style.width=i.dataset.w+'%'});$$('.box,.ver').forEach(function(b){b.style.opacity=1});$('#s1').textContent='6.8';$('#b1').textContent='3.1';$('#b2').textContent='7.4';return}
+  var tl=G.timeline({defaults:{ease:'power3.out'}});
+  tl.from('.badge',{y:18,opacity:0,duration:.7})
+    .from('.line__in',{yPercent:115,duration:1.1,stagger:.14,ease:'power4.out'},'-=.4')
+    .fromTo('#ul',{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:.9,ease:'power2.inOut'},'-=.4')
+    .from('.hero-lead',{y:24,opacity:0,duration:.8},'-=.8')
+    .from('.hero-cta .btn',{y:20,opacity:0,stagger:.1,duration:.7},'-=.6');
+  G.from('.ln',{attr:{x2:280,y2:280},duration:1.1,stagger:.08,ease:'power3.out',delay:.5});
+  G.from('.node .n',{scale:0,svgOrigin:'0 0',duration:.8,stagger:.08,ease:'back.out(2.2)',delay:.7,onComplete:function(){
+    $$('.node .n').forEach(function(n,i){G.to(n,{y:i%2?-5:5,duration:2.2+i*.25,repeat:-1,yoyo:true,ease:'sine.inOut'})});
+  }});
+  G.from('.cen',{scale:0,svgOrigin:'280 280',duration:.9,ease:'back.out(2)',delay:.4});
+
+  if(!ST)return;
+  G.from('.row',{opacity:0,y:36,duration:.8,stagger:.08,ease:'power3.out',scrollTrigger:{trigger:'.rows',start:'top 82%'}});
+  G.from('.dir-head > *',{opacity:0,y:30,duration:.9,stagger:.12,scrollTrigger:{trigger:'.dir-head',start:'top 85%'}});
+  G.from('.route-head > *',{opacity:0,y:30,duration:.9,stagger:.12,scrollTrigger:{trigger:'.route-head',start:'top 85%'}});
+
+  function count(id,to){var o={v:0},e=$(id);G.to(o,{v:to,duration:1.6,ease:'power2.out',onUpdate:function(){e.textContent=o.v.toFixed(1)}})}
+  function bars(box){G.to($$('.bar i',box),{width:function(i,t){return t.dataset.w+'%'},duration:1.3,stagger:.12,ease:'power3.out'})}
+  ST.create({trigger:'#v1',start:'top 75%',once:true,onEnter:function(){
+    count('#s1',6.8);G.to('.box',{opacity:1,duration:.4,stagger:.5,delay:.6});
+  }});
+  ST.create({trigger:'#v2',start:'top 75%',once:true,onEnter:function(){bars($('#v2'))}});
+  ST.create({trigger:'#v3',start:'top 75%',once:true,onEnter:function(){
+    G.from('#map .dot',{scale:0,duration:.6,stagger:.05,ease:'back.out(3)',transformOrigin:'50% 50%'});
+  }});
+  ST.create({trigger:'#v4',start:'top 75%',once:true,onEnter:function(){
+    var b=$('#v4'),bs=$$('.bar i',b);
+    G.to(bs[0],{width:'31%',duration:1,ease:'power3.out'});count('#b1',3.1);
+    G.to(bs[1],{width:'74%',duration:1.4,delay:1.1,ease:'power3.out'});
+    var o={v:0};G.to(o,{v:7.4,duration:1.4,delay:1.1,ease:'power2.out',onUpdate:function(){$('#b2').textContent=o.v.toFixed(1)}});
+    G.fromTo('.ver',{opacity:0,scale:.6},{opacity:1,scale:1,duration:.6,delay:2.5,ease:'back.out(2.5)'});
+  }});
+  $$('.sc-in').forEach(function(c){G.from(c,{y:70,opacity:0,duration:1,ease:'power3.out',scrollTrigger:{trigger:c,start:'top 90%'}})});
+})();
+</script>
+</body>
+</html>

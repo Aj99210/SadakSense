@@ -1,0 +1,9 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment: { POSTGRES_USER: sadak, POSTGRES_PASSWORD: sadak, POSTGRES_DB: sadaksense }
+    ports: ["5432:5432"]
+    volumes: ["./app/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql"]
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]

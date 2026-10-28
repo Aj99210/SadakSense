@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SadakSense | Mistri</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F97316'/%3E%3Cpath d='M5.5 28 12.8 5.5h6.4L26.5 28h-5l-1.2-4h-8.6l-1.2 4z' fill='%2309090B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Hanken+Grotesk:wght@300..800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#09090B;--ink-2:#18181B;--ink-3:#27272A;--paper:#F4F4F5;--mut-d:#A1A1AA;--orange:#F97316;--brand:#EA580C;--deep:#C2410C;--wash:#FFF7ED;--crit:#EF4444;--mod:#EAB308;--good:#10B981;
+--rqi-ramp:linear-gradient(90deg,#EF4444 0%,#F97316 33%,#EAB308 55%,#10B981 100%);
+--f-disp:"Bricolage Grotesque","Arial Narrow",sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-acc:"Instrument Serif",Georgia,serif;--f-mono:"Geist Mono",ui-monospace,monospace;
+--ease:cubic-bezier(.16,1,.3,1);--pad:clamp(1.25rem,4vw,3rem);--sh-or:0 8px 24px -8px rgb(249 115 22/.55)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--f-body);font-size:1.0625rem;line-height:1.6;background:var(--ink);color:var(--paper);overflow-x:clip}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+svg{display:block}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--pad)}
+.acc{font-family:var(--f-acc);font-style:italic;font-weight:400;color:var(--orange);letter-spacing:0}
+.mono{font-family:var(--f-mono)}
+#prog{position:fixed;left:0;top:0;height:4px;width:100%;background:var(--rqi-ramp);transform-origin:0 50%;transform:scaleX(0);z-index:90}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .4s,border-color .4s;border-bottom:1px solid transparent}
+nav.solid{background:rgb(9 9 11/.8);backdrop-filter:blur(14px);border-color:rgb(255 255 255/.08)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:1rem}
+.logo{display:flex;align-items:center;gap:.6rem;font-family:var(--f-disp);font-weight:800;font-size:1.25rem;letter-spacing:-.02em}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--orange);display:grid;place-items:center}
+.logo svg{width:16px;height:16px}
+.nl{display:flex;align-items:center;gap:1.6rem}
+.nl a.t{font-weight:500;font-size:.96rem;opacity:.75;transition:opacity .3s}.nl a.t:hover{opacity:1}
+
+.btn{position:relative;overflow:clip;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.75rem 1.5rem;border-radius:999px;font-weight:600;font-size:.98rem;border:1px solid transparent;transition:background .3s,box-shadow .3s,color .3s,border-color .3s,transform .4s var(--ease)}
+.btn svg{width:16px;height:16px;transition:transform .4s var(--ease)}.btn:hover svg{transform:translate(2px,-2px)}
+.btn-p{background:var(--orange);color:var(--ink)}.btn-p:hover{background:var(--brand);box-shadow:var(--sh-or)}
+.btn-p::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgb(255 255 255/.5) 50%,transparent 70%);transform:translateX(-120%);animation:shine 3.6s 1.5s infinite}
+@keyframes shine{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.btn-g{border-color:rgb(255 255 255/.28)}.btn-g:hover{background:var(--paper);color:var(--ink)}
+.btn-sm{min-height:42px;padding:.5rem 1.15rem;font-size:.92rem}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+/* hero */
+.hero{position:relative;padding:150px 0 70px;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 55% 70% at 85% 30%,rgb(249 115 22/.22),transparent 70%),linear-gradient(rgb(255 255 255/.04) 1px,transparent 1px) 0 0/64px 64px,linear-gradient(90deg,rgb(255 255 255/.04) 1px,transparent 1px) 0 0/64px 64px;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+.badge{display:inline-flex;align-items:center;gap:.6rem;border:1px solid rgb(255 255 255/.18);border-radius:999px;padding:.4rem 1rem;font-size:.92rem;background:rgb(255 255 255/.04)}
+.badge i{width:9px;height:9px;border-radius:50%;background:var(--good);animation:ping 1.8s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgb(16 185 129/.7)}100%{box-shadow:0 0 0 12px rgb(16 185 129/0)}}
+h1{font-family:var(--f-disp);font-weight:800;font-stretch:80%;font-size:clamp(3rem,1rem + 7vw,7.4rem);line-height:.94;letter-spacing:-.035em;margin-top:1.5rem;max-width:12ch}
+.rise{opacity:0;transform:translateY(28px);animation:rise .9s var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.lead{font-size:clamp(1.075rem,1rem + .45vw,1.35rem);color:var(--mut-d);max-width:54ch;margin-top:1.5rem}
+.flow{display:flex;flex-wrap:wrap;gap:.5rem .6rem;margin-top:2rem;align-items:center}
+.flow span{padding:.45rem 1rem;border-radius:999px;border:1px solid rgb(255 255 255/.16);font-size:.92rem}
+.flow b{color:var(--orange);font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:3rem;max-width:760px}
+.stat{border:1px solid rgb(255 255 255/.12);border-radius:20px;padding:1.2rem 1.4rem;background:rgb(255 255 255/.03)}
+.stat .n{font-family:var(--f-disp);font-weight:800;font-size:clamp(2rem,1.4rem + 2vw,3.2rem);line-height:1;letter-spacing:-.03em;display:block}
+.stat .l{color:var(--mut-d);font-size:.9rem}
+
+/* board */
+.board{padding:clamp(3rem,2rem + 4vw,6rem) 0}
+h2{font-family:var(--f-disp);font-weight:800;font-stretch:85%;font-size:clamp(2.1rem,1.2rem + 3.6vw,4.2rem);line-height:1;letter-spacing:-.03em}
+.bh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:1.25rem;margin-bottom:2rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{padding:.5rem 1.05rem;border-radius:999px;border:1px solid rgb(255 255 255/.18);font-weight:500;font-size:.93rem;transition:all .3s var(--ease)}
+.chip:hover{border-color:var(--orange)}
+.chip[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.job{position:relative;display:flex;flex-direction:column;gap:1rem;text-align:left;background:var(--ink-2);border:1px solid rgb(255 255 255/.09);border-radius:24px;padding:1.4rem;transition:transform .5s var(--ease),border-color .3s,box-shadow .5s;opacity:0;transform:translateY(24px)}
+.job.in{opacity:1;transform:none}
+.job:hover{transform:translateY(-6px);border-color:var(--orange);box-shadow:0 24px 48px -24px rgb(249 115 22/.35)}
+.jt{display:flex;justify-content:space-between;gap:1rem;align-items:start}
+.job h3{font-family:var(--f-disp);font-weight:700;font-size:1.35rem;letter-spacing:-.02em;line-height:1.1}
+.job .area{color:var(--mut-d);font-size:.9rem;margin-top:.2rem}
+.sev{flex:none;font-family:var(--f-mono);font-size:.72rem;padding:.2rem .65rem;border-radius:99px;border:1px solid}
+.sev.c{color:#FCA5A5;border-color:rgb(239 68 68/.5);background:rgb(239 68 68/.1)}
+.sev.s{color:#FDBA74;border-color:rgb(249 115 22/.5);background:rgb(249 115 22/.1)}
+.sev.m{color:#FDE047;border-color:rgb(234 179 8/.5);background:rgb(234 179 8/.1)}
+.meter{height:8px;border-radius:99px;background:var(--ink-3);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;width:0;transition:width 1.2s var(--ease)}
+.jm{display:flex;justify-content:space-between;align-items:end}
+.jm .r{font-family:var(--f-disp);font-weight:800;font-size:2rem;line-height:1}.jm .r small{font-size:.8rem;font-weight:500;color:var(--mut-d)}
+.jm .p{text-align:right;font-family:var(--f-mono);font-size:.82rem;color:var(--mut-d)}.jm .p b{display:block;color:var(--paper);font-size:1.05rem;font-weight:500}
+.st{align-self:flex-start;display:inline-flex;align-items:center;gap:.45rem;font-size:.85rem;font-weight:600}
+.st::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.st.open{color:#FDBA74}.st.accepted{color:#7DD3FC}.st.checking{color:#FDE047}.st.verified{color:#6EE7B7}
+.note{margin-top:2rem;color:var(--mut-d);font-size:.92rem}
+
+/* how it's checked */
+.how{background:var(--wash);color:var(--ink);padding:clamp(4rem,3rem + 5vw,8rem) 0}
+.how h2 .acc{color:var(--brand)}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.how p.lead{color:#52525B}
+.checks{display:grid;gap:.9rem}
+.ck{background:#fff;border-radius:18px;padding:1.1rem 1.3rem;display:flex;gap:1rem;align-items:flex-start;box-shadow:0 1px 1px rgb(9 9 11/.06),0 10px 20px -10px rgb(9 9 11/.14);transition:transform .4s var(--ease)}
+.ck:hover{transform:translateX(6px)}
+.ck i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font:800 .95rem var(--f-disp);font-style:normal}
+.ck h4{font-family:var(--f-disp);font-size:1.1rem;font-weight:700}.ck p{color:#52525B;font-size:.94rem}
+.ck em{font-style:normal;font-family:var(--f-mono);font-size:.7rem;background:var(--wash);color:var(--deep);border:1px solid #FED7AA;border-radius:99px;padding:.05rem .5rem;margin-left:.4rem;vertical-align:middle}
+
+footer{padding:2rem 0;color:var(--mut-d);font-size:.92rem;background:var(--ink)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center}
+
+/* drawer */
+.ov{position:fixed;inset:0;background:rgb(9 9 11/.65);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .4s;z-index:70}
+.ov.on{opacity:1;pointer-events:auto}
+.dr{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);border-left:1px solid rgb(255 255 255/.1);transform:translateX(102%);transition:transform .6s var(--ease);z-index:80;overflow-y:auto;padding:1.5rem}
+.dr.on{transform:none}
+.dh{display:flex;justify-content:space-between;align-items:start;gap:1rem}
+.dh h3{font-family:var(--f-disp);font-weight:800;font-size:1.9rem;letter-spacing:-.03em;line-height:1}
+.x{width:42px;height:42px;border-radius:50%;border:1px solid rgb(255 255 255/.2);display:grid;place-items:center;flex:none;transition:background .3s}.x:hover{background:var(--paper);color:var(--ink)}
+.steps{display:flex;gap:.35rem;margin:1.5rem 0}
+.steps i{flex:1;height:6px;border-radius:99px;background:var(--ink-3);transition:background .6s}
+.steps i.on{background:var(--orange)}
+.sl{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.74rem;color:var(--mut-d);margin:-.9rem 0 1.5rem}
+.ph{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
+.ph figure{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:var(--ink-3);border:1px solid rgb(255 255 255/.1)}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph figcaption{position:absolute;left:8px;top:8px;background:rgb(9 9 11/.8);border-radius:99px;padding:.1rem .6rem;font:500 .7rem var(--f-mono)}
+.ph .empty{display:grid;place-items:center;height:100%;color:var(--mut-d);font-size:.85rem;text-align:center;padding:1rem}
+.scan{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--orange),transparent);box-shadow:0 0 18px var(--orange);animation:scan 1.4s ease-in-out infinite}
+@keyframes scan{0%,100%{top:2%}50%{top:96%}}
+.panel{border:1px solid rgb(255 255 255/.1);border-radius:18px;padding:1.1rem 1.2rem;margin:1rem 0;background:var(--ink)}
+.panel p{color:var(--mut-d);font-size:.95rem}.panel b{color:var(--paper)}
+.row2{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.bar2{margin:.5rem 0 1rem}.bar2 .lab{display:flex;justify-content:space-between;font-size:.92rem;margin-bottom:.35rem}.bar2 .lab b{font-family:var(--f-mono);font-weight:500}
+.res{display:inline-flex;align-items:center;gap:.5rem;padding:.45rem 1rem;border-radius:99px;font-weight:600;font-size:.95rem}
+.res.ok{background:rgb(16 185 129/.14);color:#6EE7B7;border:1px solid rgb(16 185 129/.4)}
+.res.no{background:rgb(239 68 68/.12);color:#FCA5A5;border:1px solid rgb(239 68 68/.4)}
+.pay{display:grid;gap:.5rem;font-family:var(--f-mono);font-size:.9rem}.pay div{display:flex;justify-content:space-between}.pay .tot{border-top:1px dashed rgb(255 255 255/.25);padding-top:.6rem;color:var(--orange);font-size:1.05rem}
+.up{display:block;border:1.5px dashed rgb(255 255 255/.3);border-radius:16px;padding:1.2rem;text-align:center;color:var(--mut-d);cursor:pointer;transition:border-color .3s,background .3s}
+.up:hover{border-color:var(--orange);background:rgb(249 115 22/.06)}
+.up input{display:none}
+@media(max-width:960px){.grid{grid-template-columns:1fr 1fr}.hg{grid-template-columns:1fr}.nl a.t{display:none}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav id="nav"><div class="wrap">
+  <a class="logo" href="landing.html" aria-label="SadakSense home"><i><svg viewBox="0 0 32 32"><path d="M5.5 28 12.8 5.5h6.4L26.5 28h-5l-1.2-4h-8.6l-1.2 4z" fill="#09090B"/></svg></i>SadakSense</a>
+  <div class="nl"><a class="t" href="guide.html">Guide</a><a class="t" href="heatmap.html">Heatmap</a><a class="btn btn-p btn-sm" href="landing.html">Back to landing</a></div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="badge rise"><i></i>Demo with sample data</span>
+  <h1 class="rise" style="animation-delay:.1s">Fix the road. Prove it. <span class="acc">Get paid.</span></h1>
+  <p class="lead rise" style="animation-delay:.25s">Mistri turns the worst stretches SadakSense finds into repair jobs for small local contractors. When the work is done, the road is scored again. If the score improves enough, the fix is verified and the payment is released.</p>
+  <div class="flow rise" style="animation-delay:.4s"><span>Find</span><b>→</b><span>Accept</span><b>→</b><span>Repair</span><b>→</b><span>Upload after photo</span><b>→</b><span>Re-score</span><b>→</b><span>Paid</span></div>
+  <div class="stats rise" style="animation-delay:.55s">
+    <div class="stat"><span class="n" id="sOpen">0</span><span class="l">Open jobs</span></div>
+    <div class="stat"><span class="n" id="sVer">0</span><span class="l">Fixes verified</span></div>
+    <div class="stat"><span class="n" id="sPaid">₹0</span><span class="l">Paid to mistris (simulated)</span></div>
+  </div>
+</div></header>
+
+<section class="board" id="jobs" aria-labelledby="bh"><div class="wrap">
+  <div class="bh"><h2 id="bh">Jobs on the <span class="acc">board</span></h2>
+    <div class="chips" role="group" aria-label="Filter jobs"><button class="chip" data-f="all" aria-pressed="true">All</button><button class="chip" data-f="open" aria-pressed="false">Open</button><button class="chip" data-f="accepted" aria-pressed="false">In progress</button><button class="chip" data-f="verified" aria-pressed="false">Verified</button></div></div>
+  <div class="grid" id="grid"></div>
+  <p class="note">Open any job to accept it and try the full flow. Road scores and amounts are sample data, and payments are simulated.</p>
+</div></section>
+
+<section class="how" aria-labelledby="hh"><div class="wrap hg">
+  <div><h2 id="hh">How we know the <span class="acc">fix is real</span></h2>
+    <p class="lead" style="margin-top:1.25rem">The proof is a number. The same SadakSense analyzer that found the damage scores the road again after the repair.</p></div>
+  <div class="checks">
+    <div class="ck"><i>1</i><div><h4>Before and after score</h4><p>The road must improve by at least 2.5 points and reach 6.0 or higher on the RQI scale.</p></div></div>
+    <div class="ck"><i>2</i><div><h4>Same stretch, same place</h4><p>The after photo must match the job’s location and time.<em>planned</em></p></div></div>
+    <div class="ck"><i>3</i><div><h4>Citizens confirm</h4><p>Complaints on that stretch are closed only when residents agree it’s fixed.<em>planned</em></p></div></div>
+    <div class="ck"><i>4</i><div><h4>Ratings follow the work</h4><p>Only verified repairs build a mistri’s rating and unlock bigger jobs.</p></div></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><span>Scoring in this demo is simulated. The real analyzer lives on <a href="main.html" style="color:var(--orange)">main.html</a>.</span><button class="btn btn-g btn-sm" id="reset">Reset demo</button></div></footer>
+
+<div class="ov" id="ov"></div>
+<aside class="dr" id="dr" aria-hidden="true" aria-label="Job details"></aside>
+
+<script>
+(function(){
+  var $=function(s,c){return (c||document).querySelector(s)},$$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
+  var JOBS=[
+    {id:1,road:'Ring Road',area:'Ashram Chowk, South Delhi',rqi:2.4,pot:9,cost:18000,img:'data/damage_road.jpg'},
+    {id:2,road:'GT Karnal Road',area:'Azadpur, North Delhi',rqi:3.1,pot:7,cost:24500,img:'data/dm_road.jpg'},
+    {id:3,road:'Najafgarh Road',area:'Rajouri Garden, West Delhi',rqi:3.6,pot:5,cost:12000,img:'data/d_road2.jpg'},
+    {id:4,road:'Mehrauli–Badarpur Road',area:'Saket, South Delhi',rqi:2.8,pot:8,cost:21000,img:'data/d_road3.jpg'},
+    {id:5,road:'Outer Ring Road',area:'Mukarba Chowk, North Delhi',rqi:4.0,pot:4,cost:9500,img:'data/dm_road.jpg'},
+    {id:6,road:'Lodhi Road',area:'Near Jor Bagh, Central Delhi',rqi:4.4,pot:3,cost:7800,img:'data/damage_road.jpg'}
+  ];
+  var GOOD=['data/sm_road.jpg','data/s_road.jpg','data/smooth_road2.jpg'],FEE=.08,KEY='sadaksense_mistri_v1',S={},filter='all',cur=null;
+  try{S=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){S={}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+  function st(j){return (S[j.id]&&S[j.id].s)||'open'}
+  function inr(n){return '₹'+Math.round(n).toLocaleString('en-IN')}
+  function sev(r){return r<3?['c','Critical']:r<4?['s','Severe']:['m','Moderate']}
+  function col(r){return r<3.5?'#EF4444':r<5?'#F97316':r<6.5?'#EAB308':'#10B981'}
+  var LBL={open:'Open',accepted:'In progress',checking:'Checking',verified:'Verified'};
+
+  /* nav + progress */
+  var nav=$('#nav'),prog=$('#prog');
+  function sc(){var y=scrollY,h=document.documentElement.scrollHeight-innerHeight;nav.classList.toggle('solid',y>40);prog.style.transform='scaleX('+(h>0?y/h:0)+')'}
+  addEventListener('scroll',sc,{passive:true});sc();
+
+  /* stats */
+  var shown={o:0,v:0,p:0};
+  function tween(el,from,to,fmt){var t0=performance.now();(function f(t){var k=Math.min(1,(t-t0)/900),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(f)})(t0)}
+  function stats(){
+    var o=0,v=0,p=0;JOBS.forEach(function(j){var s=st(j);if(s==='open')o++;if(s==='verified'){v++;p+=j.cost*(1-FEE)}});
+    tween($('#sOpen'),shown.o,o,function(x){return Math.round(x)});tween($('#sVer'),shown.v,v,function(x){return Math.round(x)});tween($('#sPaid'),shown.p,p,inr);
+    shown={o:o,v:v,p:p};
+  }
+
+  /* board */
+  var grid=$('#grid');
+  function render(){
+    grid.innerHTML=JOBS.filter(function(j){var s=st(j);return filter==='all'||s===filter||(filter==='accepted'&&s==='checking')}).map(function(j){
+      var s=st(j),sv=sev(j.rqi),after=S[j.id]&&S[j.id].after;
+      var r=s==='verified'&&after?after:j.rqi;
+      return '<button class="job" data-id="'+j.id+'"><div class="jt"><div><h3>'+j.road+'</h3><p class="area">'+j.area+'</p></div><span class="sev '+sv[0]+'">'+sv[1]+'</span></div>'+
+        '<div class="jm"><div class="r">'+r.toFixed(1)+'<small> / 10 RQI</small></div><div class="p">'+j.pot+' potholes<b>'+inr(j.cost)+'</b></div></div>'+
+        '<div class="meter"><i data-w="'+(r*10)+'" style="background:'+col(r)+'"></i></div><span class="st '+s+'">'+LBL[s]+'</span></button>';
+    }).join('')||'<p class="note">No jobs here yet.</p>';
+    requestAnimationFrame(function(){$$('.job',grid).forEach(function(e,i){setTimeout(function(){e.classList.add('in');var m=$('.meter i',e);m.style.width=m.dataset.w+'%'},i*70)})});
+    stats();
+  }
+  grid.addEventListener('click',function(e){var b=e.target.closest('.job');if(b)openJob(+b.dataset.id)});
+  $$('.chip').forEach(function(c){c.addEventListener('click',function(){filter=c.dataset.f;$$('.chip').forEach(function(x){x.setAttribute('aria-pressed',x===c?'true':'false')});render()})});
+
+  /* drawer */
+  var dr=$('#dr'),ov=$('#ov');
+  function openJob(id){cur=JOBS.filter(function(j){return j.id===id})[0];draw();dr.classList.add('on');ov.classList.add('on');dr.setAttribute('aria-hidden','false');setTimeout(function(){var x=$('.x',dr);x&&x.focus()},50)}
+  function closeJob(){dr.classList.remove('on');ov.classList.remove('on');dr.setAttribute('aria-hidden','true');cur=null;render()}
+  ov.addEventListener('click',closeJob);addEventListener('keydown',function(e){if(e.key==='Escape'&&cur)closeJob()});
+  function bar(l,v,c,id){return '<div class="bar2"><div class="lab"><span>'+l+'</span><b id="'+id+'">'+v.toFixed(1)+'</b></div><div class="meter"><i style="width:'+(v*10)+'%;background:'+c+'"></i></div></div>'}
+  function draw(){
+    var j=cur,s=st(j),d=S[j.id]||{},sv=sev(j.rqi);
+    var step={open:0,accepted:2,checking:3,verified:4}[s];
+    var h='<div class="dh"><div><span class="sev '+sv[0]+'">'+sv[1]+'</span><h3 style="margin-top:.7rem">'+j.road+'</h3><p class="mono" style="color:var(--mut-d);font-size:.85rem;margin-top:.4rem">'+j.area+'</p></div><button class="x" aria-label="Close">✕</button></div>';
+    h+='<div class="steps">'+[0,1,2,3,4].map(function(i){return '<i class="'+(i<=step?'on':'')+'"></i>'}).join('')+'</div><div class="sl"><span>Accept</span><span>Repair</span><span>After photo</span><span>Re-score</span><span>Paid</span></div>';
+    h+='<div class="ph"><figure><img src="'+j.img+'" alt="Road before repair" onerror="this.remove()"><figcaption>Before · '+j.rqi.toFixed(1)+'</figcaption></figure><figure>'+
+      (d.img?'<img src="'+d.img+'" alt="Road after repair"><figcaption>After'+(d.after?' · '+d.after.toFixed(1):'')+'</figcaption>'+(s==='checking'?'<div class="scan"></div>':''):'<div class="empty">After photo appears here</div>')+'</figure></div>';
+    if(s==='open'){
+      h+='<div class="panel"><p><b>The job:</b> repair '+j.pot+' potholes on this stretch. Budget <b>'+inr(j.cost)+'</b>. You receive <b>'+inr(j.cost*(1-FEE))+'</b> after the platform fee of 8%, once the fix is verified.</p></div><button class="btn btn-p" id="acc">Accept this job</button>';
+    }else if(s==='accepted'){
+      h+='<div class="panel"><p><b>You’re on this job.</b> Do the repair, then upload a photo of the same stretch. SadakSense will score it again.'+(d.note?'</p><p style="margin-top:.7rem;color:#FCA5A5"><b>'+d.note:'')+'</b></p></div>'+
+        '<label class="up"><input type="file" accept="image/*" id="file">Upload your after photo</label>'+
+        '<div class="row2"><button class="btn btn-g btn-sm" id="sgood">Use a good repair sample</button><button class="btn btn-g btn-sm" id="sbad">Use a poor repair sample</button></div>';
+    }else if(s==='checking'){
+      h+='<div class="panel"><p><b>Re-scoring the road…</b> Comparing against the before photo.</p></div>';
+    }else{
+      var net=j.cost*(1-FEE);
+      h+=bar('Before repair',j.rqi,col(j.rqi),'ab1')+bar('After repair',d.after,col(d.after),'ab2')+'<span class="res ok">✓ Fix verified · +'+(d.after-j.rqi).toFixed(1)+' points</span>'+
+        '<div class="panel" style="margin-top:1.2rem"><div class="pay"><div><span>Job budget</span><span>'+inr(j.cost)+'</span></div><div><span>Platform fee (8%)</span><span>− '+inr(j.cost*FEE)+'</span></div><div class="tot"><span>Paid to mistri</span><span>'+inr(net)+'</span></div></div><p style="margin-top:.8rem;font-size:.85rem">Simulated payment. No money moves in this demo.</p></div>';
+    }
+    dr.innerHTML=h;
+    $('.x',dr).addEventListener('click',closeJob);
+    var a=$('#acc');if(a)a.addEventListener('click',function(){S[j.id]={s:'accepted'};save();draw()});
+    var f=$('#file');if(f)f.addEventListener('change',function(){var fl=f.files[0];if(!fl)return;var r=new FileReader();r.onload=function(){check(r.result,6.2+((fl.size%19)/10))};r.readAsDataURL(fl)});
+    var g=$('#sgood');if(g)g.addEventListener('click',function(){check(GOOD[j.id%GOOD.length],7.4)});
+    var b=$('#sbad');if(b)b.addEventListener('click',function(){check(j.img,j.rqi+1.1)});
+  }
+  function check(img,score){
+    var j=cur;S[j.id]={s:'checking',img:img};draw();
+    setTimeout(function(){
+      var pass=score>=6&&score-j.rqi>=2.5;
+      if(pass){S[j.id]={s:'verified',img:img,after:Math.min(9.4,score)}}
+      else{S[j.id]={s:'accepted',note:'Not verified. The after score was '+score.toFixed(1)+', which is not enough of an improvement. Repair it properly and upload again.'}}
+      save();draw();render();
+    },2200);
+  }
+
+  $('#reset').addEventListener('click',function(){S={};save();render()});
+  render();
+})();
+</script>
+</body>
+</html>
