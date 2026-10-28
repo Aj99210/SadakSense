@@ -1,807 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SadakSense - System Initialization</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;600;700&family=Share+Tech+Mono&display=swap"
-        rel="stylesheet">
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SadakSense — Fix the road. Free the traffic. Clear the air.</title>
+<meta name="description" content="SadakSense turns a single road photo into a Road Quality Index, a traffic forecast and a greener city.">
+<meta name="theme-color" content="#09090B">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F97316'/%3E%3Cpath d='M5.5 28 12.8 5.5h6.4L26.5 28z' fill='%2309090B'/%3E%3Cpath d='M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z' fill='%23F97316'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Hanken+Grotesk:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#09090B;--paper:#F4F4F5;--mut:#A1A1AA;--orange:#F97316;--brand:#EA580C;--crit:#EF4444;--mod:#EAB308;--good:#10B981;--cyan:#06B6D4;
+--ease:cubic-bezier(.16,1,.3,1);--f-disp:"Bricolage Grotesque","Arial Narrow",sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-acc:"Instrument Serif",Georgia,serif;--f-mono:"Geist Mono",ui-monospace,monospace;--pad:clamp(1.1rem,4vw,3rem)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--ink);color:var(--paper);overflow:hidden;font-family:var(--f-body);-webkit-font-smoothing:antialiased}
+body::after{content:"";position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+button,a{font:inherit;color:inherit;text-decoration:none;cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.mono{font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.14em;font-size:.7rem}
+.acc{font-family:var(--f-acc);font-style:italic;font-weight:400;color:var(--orange)}
 
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #030508;
-            color: #e0e0e0;
-            font-family: 'Rajdhani', sans-serif;
-            user-select: none;
-        }
+/* stage */
+#stage{position:fixed;inset:0}
+#road{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,transparent 25%,rgba(9,9,11,.85) 100%),linear-gradient(to bottom,rgba(9,9,11,.75),transparent 28%,transparent 60%,rgba(9,9,11,.9))}
 
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+/* photo split */
+.photos{position:absolute;inset:0;opacity:0;transition:opacity .9s var(--ease)}
+.photos.on{opacity:1}
+.ph{position:absolute;top:0;bottom:0;background-size:cover;background-position:center;transition:clip-path 1.4s var(--ease),transform 8s linear,filter 1s}
+.ph.bad{left:0;right:0;background-image:url(data/d_road3.jpg);clip-path:inset(0 0 0 0);filter:saturate(.8) contrast(1.05) brightness(.7)}
+.ph.good{left:0;right:0;background-image:url(data/s_road.jpg);clip-path:inset(0 0 0 100%);filter:brightness(.8) saturate(1.05)}
+.photos.on .ph{transform:scale(1.08)}
+.photos.fixed .bad{clip-path:inset(0 100% 0 0)}
+.photos.fixed .good{clip-path:inset(0 0 0 0)}
+.edge{position:absolute;top:0;bottom:0;width:2px;left:100%;background:var(--orange);box-shadow:0 0 24px 2px var(--orange);opacity:0;transition:left 1.4s var(--ease),opacity .4s}
+.photos.fixed .edge{left:0;opacity:1}
+.photos.fixed.done .edge{opacity:0}
 
-        /* Topographical / Tech Grid */
-        .topo-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(255, 102, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 102, 0, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: 2;
-            pointer-events: none;
-            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-            animation: gridMove 10s linear infinite;
-        }
+/* detection boxes */
+.det{position:absolute;border:1.5px solid var(--crit);border-radius:3px;opacity:0;transform:scale(1.4);transition:opacity .35s,transform .5s var(--ease);box-shadow:0 0 18px rgba(239,68,68,.5)}
+.det.on{opacity:1;transform:scale(1)}
+.det span{position:absolute;left:-1.5px;top:-1.6rem;background:var(--crit);color:#fff;padding:.15rem .45rem;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.08em;white-space:nowrap;border-radius:3px 3px 3px 0}
+.scan{position:absolute;left:0;right:0;height:140px;top:-140px;background:linear-gradient(to bottom,transparent,rgba(249,115,22,.22),transparent);border-bottom:1px solid var(--orange);opacity:0}
+.scan.go{opacity:1;animation:scan 1.8s linear forwards}
+@keyframes scan{to{top:105%}}
 
-        @keyframes gridMove {
-            0% {
-                background-position: 0 0;
-            }
+/* chrome */
+.top{position:fixed;z-index:20;top:0;left:0;right:0;padding:calc(var(--pad)*.7) var(--pad);display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:.65rem;font-family:var(--f-disp);font-weight:800;font-size:1.2rem;letter-spacing:-.01em}
+.brand svg{width:30px;height:30px}
+.skip{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;padding:.5rem 1.1rem;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:#d4d4d8;backdrop-filter:blur(10px);background:rgba(9,9,11,.35);transition:.3s var(--ease)}
+.skip:hover{background:#fff;color:var(--ink);border-color:#fff}
+.bottom{position:fixed;z-index:20;left:0;right:0;bottom:0;padding:var(--pad);display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;color:var(--mut)}
+.timeline{position:fixed;z-index:21;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}
+.timeline i{display:block;height:100%;width:0;background:linear-gradient(90deg,#EF4444,#F97316 40%,#EAB308 65%,#10B981)}
+.dots{display:flex;gap:.5rem}.dots b{width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.18);transition:.5s var(--ease)}.dots b.on{background:var(--orange);width:42px}
 
-            100% {
-                background-position: 0 50px;
-            }
-        }
+/* scenes */
+.scene{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;padding:0 var(--pad);pointer-events:none}
+.scene>*{max-width:1320px;width:100%;margin-left:auto;margin-right:auto}
+.scene .in{opacity:0;transform:translateY(34px);filter:blur(10px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .9s var(--ease)}
+.scene.on .in{opacity:1;transform:none;filter:none}
+.scene.on .in:nth-child(2){transition-delay:.12s}.scene.on .in:nth-child(3){transition-delay:.26s}.scene.on .in:nth-child(4){transition-delay:.4s}
+.scene.out .in{opacity:0;transform:translateY(-24px);filter:blur(8px);transition-duration:.5s;transition-delay:0s}
+.kicker{display:flex;align-items:center;gap:.7rem;color:var(--orange);margin-bottom:1.1rem}
+.kicker b{width:34px;height:3px;background:currentColor;border-radius:2px}
+h1,h2{font-family:var(--f-disp);font-weight:800;line-height:.95;letter-spacing:-.02em;font-stretch:88%;text-wrap:balance}
+.big{font-size:clamp(2.8rem,1rem + 8vw,8.2rem)}
+.mid{font-size:clamp(2.2rem,1rem + 5vw,5.4rem)}
+.sub{margin-top:1.4rem;font-size:clamp(1.05rem,1rem + .4vw,1.35rem);color:#c4c4cc;max-width:46ch;line-height:1.5}
 
-        .vignette {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, transparent 30%, #020305 100%);
-            z-index: 3;
-            pointer-events: none;
-        }
+/* HUD cards */
+.hud{display:flex;flex-wrap:wrap;gap:1rem;margin-top:2rem}
+.card{min-width:min(100%,190px);padding:1rem 1.2rem;border-radius:18px;background:rgba(9,9,11,.55);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.card .mono{color:var(--mut);display:block;margin-bottom:.35rem}
+.card strong{font-family:var(--f-mono);font-weight:500;font-size:clamp(1.8rem,1.2rem + 2vw,3rem);line-height:1;font-variant-numeric:tabular-nums;transition:color .6s}
+.card small{font-family:var(--f-mono);font-size:.8rem;color:var(--mut);margin-left:.25rem}
+.rqi-bar{margin-top:.7rem;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.rqi-bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--c,var(--crit));transition:width 1.6s var(--ease),background .6s}
+.bad-t{color:var(--crit)}.good-t{color:var(--good)}
 
-        .ui-layer {
-            position: absolute;
-            z-index: 20;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 2rem;
-            box-sizing: border-box;
-        }
+/* finale */
+#s4{align-items:center;text-align:center;pointer-events:none}
+#s4>*{display:flex;flex-direction:column;align-items:center}
+.logo{width:clamp(70px,10vw,110px);margin-bottom:1.6rem;filter:drop-shadow(0 18px 40px rgba(249,115,22,.55))}
+.word{font-size:clamp(3.4rem,1rem + 11vw,10.5rem);line-height:.9}
+.word span{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-70deg);filter:blur(12px);transition:.9s var(--ease)}
+#s4.on .word span{opacity:1;transform:none;filter:none}
+.tag{margin-top:1.4rem;font-size:clamp(1.1rem,1rem + .8vw,1.7rem);color:#d4d4d8}
+.tag .acc{font-size:1.15em}
+.cta{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;margin-top:2.2rem;pointer-events:auto}
+.btn{display:inline-flex;align-items:center;gap:.6rem;min-height:52px;padding:.8rem 1.8rem;border-radius:999px;font-weight:600;transition:transform .3s var(--ease),box-shadow .3s,background .3s}
+.btn:active{transform:scale(.96)}
+.btn-p{background:var(--orange);color:var(--ink)}.btn-p:hover{background:var(--brand);box-shadow:0 10px 34px -6px rgba(249,115,22,.7)}
+.btn-p svg{transition:transform .3s var(--ease)}.btn-p:hover svg{transform:translateX(4px)}
+.btn-s{border:1.5px solid rgba(255,255,255,.4)}.btn-s:hover{background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:2rem;color:var(--mut)}
+.chips span{padding:.4rem .8rem;border:1px solid rgba(255,255,255,.12);border-radius:999px}
+.auto{margin-top:1.4rem;color:var(--mut)}
 
-        /* Glassmorphism Panels */
-        .glass-panel {
-            background: rgba(10, 12, 16, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 102, 0, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 102, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-panel::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-            transform: skewX(-25deg);
-            animation: panelShimmer 4s infinite;
-        }
-
-        @keyframes panelShimmer {
-            0% {
-                left: -100%;
-            }
-
-            20% {
-                left: 200%;
-            }
-
-            100% {
-                left: 200%;
-            }
-        }
-
-        /* High-tech Corners */
-        .corner-deco {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #ff6600;
-        }
-
-        .top-left {
-            top: -1px;
-            left: -1px;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .top-right {
-            top: -1px;
-            right: -1px;
-            border-left: none;
-            border-bottom: none;
-        }
-
-        .bottom-left {
-            bottom: -1px;
-            left: -1px;
-            border-right: none;
-            border-top: none;
-        }
-
-        .bottom-right {
-            bottom: -1px;
-            right: -1px;
-            border-left: none;
-            border-top: none;
-        }
-
-        .title-glitch {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            color: #fff;
-            text-shadow: 2px 0 0 #ff6600, -2px 0 0 #00e5ff, 0 0 20px rgba(255, 102, 0, 0.5);
-            animation: subtleGlitch 3s infinite;
-        }
-
-        @keyframes subtleGlitch {
-
-            0%,
-            100% {
-                text-shadow: 2px 0 0 #ff6600, -2px 0 0 #00e5ff, 0 0 20px rgba(255, 102, 0, 0.5);
-            }
-
-            92% {
-                text-shadow: 2px 0 0 #ff6600, -2px 0 0 #00e5ff, 0 0 20px rgba(255, 102, 0, 0.5);
-            }
-
-            94% {
-                text-shadow: -3px 2px 0 #ff6600, 2px -2px 0 #00e5ff, 0 0 20px rgba(255, 102, 0, 0.8);
-                transform: translate(-1px, 1px);
-            }
-
-            96% {
-                text-shadow: 2px 0 0 #ff6600, -2px 0 0 #00e5ff, 0 0 20px rgba(255, 102, 0, 0.5);
-                transform: translate(0, 0);
-            }
-        }
-
-        /* Custom Radar/Scanner */
-        .sat-scanner {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 1px dashed rgba(0, 229, 255, 0.4);
-            position: relative;
-            background: radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, transparent 70%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sat-sweep {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 229, 255, 0.5) 360deg);
-            animation: sweep 2s linear infinite;
-        }
-
-        @keyframes sweep {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 0, 0, 0.6);
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #ff3300, #ff9900, #00e5ff);
-            background-size: 200% 100%;
-            width: 0%;
-            position: relative;
-            box-shadow: 0 0 15px rgba(255, 102, 0, 0.6);
-            animation: gradientShift 2s linear infinite;
-        }
-
-        @keyframes gradientShift {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
-        }
-
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.02) 51%, transparent 51%);
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 30;
-        }
-
-        .status-pulse {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            box-shadow: 0 0 10px currentColor;
-        }
-    </style>
+#flash{position:fixed;inset:0;z-index:70;background:var(--ink);opacity:0;pointer-events:none;transition:opacity .6s var(--ease)}
+#flash.on{opacity:1}
+#start{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;background:var(--ink);transition:opacity .7s var(--ease),visibility .7s}
+#start.hide{opacity:0;visibility:hidden}
+.pulse{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:var(--orange);color:var(--ink);position:relative;transition:transform .3s var(--ease)}
+.pulse::before,.pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--orange);animation:ring 2.2s infinite}
+.pulse::after{animation-delay:1.1s}
+@keyframes ring{from{transform:scale(1);opacity:.8}to{transform:scale(2.3);opacity:0}}
+#start:hover .pulse{transform:scale(1.08)}
+@media(max-width:640px){.bottom .hide-m{display:none}.card{flex:1 1 42%}.det span{font-size:.55rem}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
+</style>
 </head>
-
 <body>
+<canvas id="road" aria-hidden="true"></canvas>
+<div class="photos" id="photos" aria-hidden="true">
+  <div class="ph bad"></div><div class="ph good"></div><div class="edge"></div>
+  <div class="det" id="d1" style="left:18%;top:62%;width:19%;height:15%"><span>POTHOLE · 94%</span></div>
+  <div class="det" id="d2" style="left:52%;top:70%;width:14%;height:11%"><span>CRACK · 88%</span></div>
+  <div class="det" id="d3" style="left:70%;top:56%;width:11%;height:9%"><span>RAVELLING · 81%</span></div>
+  <div class="scan" id="scan"></div>
+</div>
+<div class="vig"></div>
 
-    <!-- Overlay Effects -->
-    <div class="topo-grid"></div>
-    <div class="vignette"></div>
-    <div class="scan-line"></div>
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#F97316"/><path d="M5.5 28 12.8 5.5h6.4L26.5 28z" fill="#09090B"/><path d="M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z" fill="#F97316"/></svg>SadakSense</div>
+  <a class="skip mono" href="landing.html" id="skip">Skip intro <span aria-hidden="true">→</span></a>
+</header>
 
-    <!-- 3D Scene -->
-    <div id="canvas-container"></div>
+<!-- Scene 1 -->
+<section class="scene" id="s1" aria-live="polite">
+  <div class="kicker mono in"><b></b>Delhi · 07:42 AM · Peak hour</div>
+  <h1 class="big in">One pothole.<br><span class="acc">Ten thousand</span> idling engines.</h1>
+  <p class="sub in">A single bad patch makes drivers brake, swerve and crawl. Queues become jams. Jams become the air we breathe.</p>
+</section>
 
-    <!-- UI Layer -->
-    <div class="ui-layer">
+<!-- Scene 2 -->
+<section class="scene" id="s2">
+  <div class="kicker mono in"><b></b>01 — See &amp; Score</div>
+  <h2 class="mid in">One photo.<br><span class="acc">Every defect</span> found.</h2>
+  <div class="hud in">
+    <div class="card"><span class="mono">Road Quality Index</span><strong id="rqi" class="bad-t">0.0</strong><small>/ 10</small><div class="rqi-bar"><i id="rqibar"></i></div></div>
+    <div class="card"><span class="mono">Avg. speed</span><strong id="spd">42</strong><small>km/h</small></div>
+    <div class="card"><span class="mono">Defects</span><strong id="def">0</strong><small>detected</small></div>
+  </div>
+</section>
 
-        <!-- Header Section -->
-        <div class="flex justify-between items-start w-full">
-            <!-- Title -->
-            <div class="relative pl-5 border-l-2 border-orange-500">
-                <h1 class="text-4xl md:text-5xl title-glitch leading-none">SadakSense</h1>
-                <div class="flex items-center gap-3 mt-2">
-                    <span
-                        class="bg-orange-900/40 border border-orange-500/50 px-2 py-0.5 rounded text-[10px] text-orange-400 font-mono tracking-widest">v1.0.4-RQI</span>
-                    <span class="text-[10px] text-gray-400 font-mono tracking-[0.2em] flex items-center gap-1">
-                        <i data-lucide="satellite" class="w-3 h-3 text-cyan-400"></i> ORBITAL LINK ACTIVE
-                    </span>
-                </div>
-            </div>
+<!-- Scene 3 -->
+<section class="scene" id="s3">
+  <div class="kicker mono in"><b></b>02 — Fix &amp; Forecast</div>
+  <h2 class="mid in">Fix it once.<br><span class="acc">Free the traffic.</span></h2>
+  <div class="hud in">
+    <div class="card"><span class="mono">Road Quality Index</span><strong id="rqi2">3.2</strong><small>/ 10</small><div class="rqi-bar"><i id="rqibar2"></i></div></div>
+    <div class="card"><span class="mono">Avg. speed</span><strong id="spd2">18</strong><small>km/h</small></div>
+    <div class="card"><span class="mono">CO₂ per trip</span><strong id="co2" class="good-t">−0</strong><small>%</small></div>
+  </div>
+</section>
 
-            <!-- Systems Panel -->
-            <div class="glass-panel p-3 md:p-4 rounded-lg flex gap-6 items-center">
-                <div class="corner-deco top-left"></div>
-                <div class="corner-deco bottom-right"></div>
-
-                <div class="flex flex-col gap-2 font-mono">
-                    <div class="flex items-center justify-between w-36">
-                        <span class="text-[10px] text-gray-400 uppercase tracking-widest">Sat-Telemetry</span>
-                        <div class="status-pulse text-cyan-400 bg-cyan-400 animate-pulse"></div>
-                    </div>
-                    <div class="flex items-center justify-between w-36">
-                        <span class="text-[10px] text-gray-400 uppercase tracking-widest">RQI Engine</span>
-                        <div class="status-pulse text-orange-500 bg-orange-500"></div>
-                    </div>
-                    <div class="flex items-center justify-between w-36">
-                        <span class="text-[10px] text-gray-400 uppercase tracking-widest">Traffic Sim</span>
-                        <div class="status-pulse text-yellow-400 bg-yellow-400"></div>
-                    </div>
-                </div>
-
-                <!-- Radar Visual -->
-                <div class="sat-scanner ml-2 hidden md:flex">
-                    <div class="sat-sweep"></div>
-                    <i data-lucide="map"
-                        class="relative z-10 w-6 h-6 text-cyan-300 drop-shadow-[0_0_5px_rgba(0,229,255,0.8)]"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Middle Spacer -->
-        <div class="flex-grow flex items-center justify-center pointer-events-none">
-            <!-- Targeting Reticle Overlay -->
-            <div
-                class="w-64 h-64 border border-white/5 rounded-full relative animate-[spin_20s_linear_infinite] hidden md:block">
-                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-4 bg-orange-500/50"></div>
-                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-4 bg-orange-500/50"></div>
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-1 bg-cyan-500/50"></div>
-                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-1 bg-cyan-500/50"></div>
-            </div>
-        </div>
-
-        <!-- Footer Section -->
-        <div class="flex flex-col lg:flex-row gap-4 items-stretch h-56 lg:h-48">
-
-            <!-- Terminal / Logs -->
-            <div class="glass-panel w-full lg:w-1/3 rounded-lg flex flex-col p-4">
-                <div class="corner-deco top-right"></div>
-                <div class="flex justify-between items-center mb-2 border-b border-gray-700/50 pb-2">
-                    <span class="text-xs text-orange-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <i data-lucide="terminal-square" class="w-4 h-4"></i> Analysis Log
-                    </span>
-                    <span class="text-[10px] text-gray-500 font-mono">/engine/rqi_calc</span>
-                </div>
-                <div id="terminal-log"
-                    class="font-mono text-[11px] text-cyan-100/70 space-y-1.5 overflow-hidden flex-col flex justify-end h-full">
-                    <!-- JS injects here -->
-                </div>
-            </div>
-
-            <!-- Main Loader & Stats -->
-            <div class="glass-panel w-full lg:w-2/3 rounded-lg p-5 flex flex-col justify-between relative">
-                <div class="corner-deco bottom-left"></div>
-
-                <div class="flex justify-between items-start">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.3em] mb-1">Process
-                            Status</span>
-                        <h2 id="loading-text"
-                            class="text-2xl md:text-3xl font-bold text-white tracking-widest uppercase">INITIALIZING
-                            SENSORS...</h2>
-                    </div>
-                    <div class="text-right flex items-baseline gap-1">
-                        <span id="percentage"
-                            class="text-5xl md:text-6xl font-bold font-share-tech-mono text-orange-500 leading-none drop-shadow-[0_0_10px_rgba(255,102,0,0.5)]">0</span>
-                        <span class="text-2xl text-orange-700">%</span>
-                    </div>
-                </div>
-
-                <!-- Congestion Visualizer -->
-                <div class="w-full h-10 mt-3 flex items-end gap-[2px] opacity-80" id="bars-container">
-                    <!-- Bars injected by JS -->
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="mt-4">
-                    <div class="progress-container">
-                        <div id="main-progress" class="progress-bar"></div>
-                    </div>
-                    <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-mono uppercase tracking-wider">
-                        <span>Sectors: <span class="text-cyan-400">Mapped</span></span>
-                        <span>Model: <span class="text-orange-400">Heuristic</span></span>
-                        <span id="geo-coords">LAT: 28.61°N / LNG: 77.20°E</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Finale -->
+<section class="scene" id="s4">
+  <div>
+    <svg class="logo in" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#F97316"/><path d="M5.5 28 12.8 5.5h6.4L26.5 28z" fill="#09090B"/><path d="M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z" fill="#F97316"/></svg>
+    <h2 class="word in" aria-label="SadakSense"></h2>
+    <p class="tag in">Fix the road. <span class="acc">Free the traffic.</span> Clear the air.</p>
+    <div class="cta in">
+      <a class="btn btn-p" href="landing.html" id="enter">Enter SadakSense <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+      <a class="btn btn-s" href="guide.html">3-minute demo route</a>
     </div>
+    <div class="chips mono in"><span>AI damage detection</span><span>RQI 0–10</span><span>Traffic forecast</span><span>City heatmap</span><span>3D reconstruction</span></div>
+    <p class="auto mono in" id="auto">Entering in 4s…</p>
+  </div>
+</section>
 
-    <!-- Completion Overlay -->
-    <div id="success-overlay"
-        class="absolute inset-0 bg-cyan-900/20 z-50 pointer-events-none flex items-center justify-center opacity-0 scale-110">
-        <div class="glass-panel px-12 py-8 text-center border-cyan-400 shadow-[0_0_50px_rgba(0,229,255,0.2)]">
-            <h1
-                class="text-3xl md:text-5xl text-cyan-400 font-bold tracking-[0.2em] uppercase font-orbitron drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]">
-                ANALYSIS COMPLETE</h1>
-            <p class="text-cyan-100 font-mono mt-4 tracking-widest text-sm uppercase">Routing to Dashboard...</p>
-        </div>
-    </div>
+<footer class="bottom">
+  <span class="mono" id="geo">28.6139°N · 77.2090°E</span>
+  <div class="dots" id="dots"><b class="on"></b><b></b><b></b><b></b></div>
+  <span class="mono hide-m">Greener Cities, Better Living</span>
+</footer>
+<div class="timeline"><i id="tl"></i></div>
+<div id="flash"></div>
 
-    <script>
-        // --- ICONS ---
-        lucide.createIcons();
+<button id="start" aria-label="Play SadakSense intro">
+  <div class="pulse"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+  <span class="mono" style="color:var(--mut)">Press to begin · <a href="landing.html" style="color:var(--orange)" onclick="event.stopPropagation()">or skip</a></span>
+</button>
 
-        // --- CONFIG ---
-        const LOADING_DURATION = 6500;
-        const NEXT_PAGE = 'landing.html';
+<script>
+(()=>{
+const NEXT='landing.html', $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T={s1:[0,3600],s2:[3800,8200],s3:[8400,12400],s4:[12600,Infinity]};
+const TOTAL=12600;
 
-        // --- THREE.JS SCENE (Traffic/Road Data Visualization) ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x030508, 0.015);
+/* ===== Perspective road canvas ===== */
+const cv=$('road'),ctx=cv.getContext('2d');let W,H,DPR;
+function size(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',size);size();
+let health=0,speed=.35,photoOn=false; // health 0 bad → 1 good
+const cars=Array.from({length:26},(_,i)=>({lane:(i%4)-1.5,z:Math.random(),v:.15+Math.random()*.25,h:Math.random()}));
+const lerp=(a,b,t)=>a+(b-a)*t;
+function mix(c1,c2,t){return c1.map((v,i)=>Math.round(lerp(v,c2[i],t)))}
+let last=performance.now(),dash=0;
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  ctx.clearRect(0,0,W,H);
+  if(photoOn){requestAnimationFrame(frame);return}
+  const hz=H*.42,cx=W/2+Math.sin(now/3000)*W*.015,rw=Math.min(W*1.1,1400);
+  ctx.fillStyle='#09090B';ctx.fillRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,0,hz);
+  const warm=mix([60,18,10],[8,40,48],health);
+  sky.addColorStop(0,'#09090B');sky.addColorStop(1,`rgb(${warm})`);
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,hz);
+  // sun glow
+  const g=ctx.createRadialGradient(cx,hz,0,cx,hz,W*.5);
+  const gc=mix([239,68,68],[16,185,129],health);
+  g.addColorStop(0,`rgba(${gc},.5)`);g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,hz+40);
+  // road surface
+  const rg=ctx.createLinearGradient(0,hz,0,H);rg.addColorStop(0,'#141417');rg.addColorStop(1,'#1c1c20');
+  ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(cx-6,hz);ctx.lineTo(cx+6,hz);ctx.lineTo(cx+rw/2,H);ctx.lineTo(cx-rw/2,H);ctx.fill();
+  // edge lines
+  ctx.strokeStyle=`rgba(${gc},.8)`;ctx.lineWidth=2;ctx.shadowColor=`rgb(${gc})`;ctx.shadowBlur=14;
+  [-1,1].forEach(s=>{ctx.beginPath();ctx.moveTo(cx+s*6,hz);ctx.lineTo(cx+s*rw/2,H);ctx.stroke()});ctx.shadowBlur=0;
+  // dashes
+  dash=(dash+dt*speed*1.6)%1;
+  for(let i=0;i<14;i++){
+    const z0=((i+dash)/14),z1=z0+.04;if(z1>1)continue;
+    const p=t=>Math.pow(t,2.2);const y0=hz+(H-hz)*p(z0),y1=hz+(H-hz)*p(Math.min(1,z1));
+    const w0=3+rw*.022*p(z0),w1=3+rw*.022*p(Math.min(1,z1));
+    ctx.fillStyle='rgba(244,244,245,.75)';ctx.beginPath();ctx.moveTo(cx-w0/2,y0);ctx.lineTo(cx+w0/2,y0);ctx.lineTo(cx+w1/2,y1);ctx.lineTo(cx-w1/2,y1);ctx.fill();
+  }
+  // potholes drifting by (fade as health rises)
+  if(health<.98){for(let i=0;i<6;i++){
+    const z=((i/6)+dash*.0+((now/(2600/speed))%1))%1,p=Math.pow(z,2.2),y=hz+(H-hz)*p,x=cx+((i%3)-1)*rw*.16*p,r=4+p*70*(1-health);
+    ctx.fillStyle=`rgba(0,0,0,${.7*(1-health)})`;ctx.beginPath();ctx.ellipse(x,y,r*1.6,r*.5,0,0,7);ctx.fill();
+    ctx.strokeStyle=`rgba(239,68,68,${.5*(1-health)})`;ctx.lineWidth=1.5;ctx.stroke();}}
+  // cars: light streaks
+  cars.forEach(c=>{
+    c.z+=dt*c.v*speed*lerp(.5,1.4,health);if(c.z>1){c.z=0;c.h=Math.random()}
+    const p=Math.pow(c.z,2.2),y=hz+(H-hz)*p,x=cx+c.lane*rw*.115*p,w=3+p*34,hh=2+p*14;
+    const col=health>.5?(c.h>.5?[16,185,129]:[6,182,212]):(c.h>.4?[239,68,68]:[249,115,22]);
+    ctx.fillStyle=`rgba(${col},${.25+p*.75})`;ctx.shadowColor=`rgb(${col})`;ctx.shadowBlur=10+p*14;
+    ctx.fillRect(x-w/2,y,w*.28,hh);ctx.fillRect(x+w/2-w*.28,y,w*.28,hh);ctx.shadowBlur=0;
+    // congestion: bad road = cars bunch & brake-glow
+    if(health<.5&&p>.25){ctx.fillStyle=`rgba(239,68,68,${.08*(1-health*2)})`;ctx.fillRect(x-w/2,y-hh,w,hh*2.5)}
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 30, 40);
-        camera.lookAt(0, 0, 0);
+/* ===== helpers ===== */
+const scenes=['s1','s2','s3','s4'].map($),dots=[...$('dots').children];
+function show(i){scenes.forEach((s,k)=>{if(k===i){s.classList.remove('out');s.classList.add('on')}else if(s.classList.contains('on')){s.classList.add('out');s.classList.remove('on')}});dots.forEach((d,k)=>d.classList.toggle('on',k===i))}
+function count(el,from,to,dur,dec=1,pre='',cb){const t0=performance.now();(function f(n){const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=pre+(from+(to-from)*e).toFixed(dec);cb&&cb(e);if(k<1)requestAnimationFrame(f)})(t0)}
+const rampColor=v=>v<4?'#EF4444':v<6?'#F97316':v<7.5?'#EAB308':'#10B981';
+function ease(v,to,sp){return v+(to-v)*sp}
+function tween(setter,from,to,dur){const t0=performance.now();(function f(n){const k=Math.min(1,(n-t0)/dur);setter(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(t0)}
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
+// finale word letters
+const word=$('s4').querySelector('.word');
+'SadakSense'.split('').forEach((ch,i)=>{const s=document.createElement('span');s.textContent=ch;s.style.transitionDelay=(.35+i*.045)+'s';if(i>=5)s.style.color='var(--orange)';word.appendChild(s)});
 
-        // 1. Digital Terrain Map
-        const planeGeo = new THREE.PlaneGeometry(150, 150, 40, 40);
-        const planeMat = new THREE.MeshBasicMaterial({
-            color: 0x0a1018,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.15
-        });
-        const plane = new THREE.Mesh(planeGeo, planeMat);
-        plane.rotation.x = -Math.PI / 2;
+/* ===== timeline ===== */
+let timers=[],t0=0,raf,done=false,countdown;
+const at=(ms,fn)=>timers.push(setTimeout(fn,ms));
+function go(){ if(done)return;done=true;clearInterval(countdown);$('flash').classList.add('on');setTimeout(()=>location.replace(NEXT),550)}
+function play(){
+  t0=performance.now();
+  show(0);health=0;speed=.35;
+  tween(v=>speed=v,.35,.9,3200);
+  at(T.s1[1]-300,()=>{ // → scene 2: photo + AI scan
+    show(1);$('photos').classList.add('on');photoOn=true;
+    $('scan').classList.add('go');
+    [['d1',500],['d2',1000],['d3',1500]].forEach(([id,d],k)=>at(T.s2[1]-T.s1[1]+300+d-300+0,()=>{}));
+  });
+  const s2=T.s2[0]-300;
+  [['d1',700],['d2',1250],['d3',1800]].forEach(([id,d],k)=>at(s2+d,()=>{$(id).classList.add('on');count($('def'),k,k+1,400,0)}));
+  at(s2+300,()=>{count($('rqi'),0,3.2,2200,1,'',e=>{});tween(v=>{$('rqibar').style.width=v*32+'%'},0,1,2200);$('rqibar').style.setProperty('--c','#EF4444');});
+  at(s2+2600,()=>{count($('spd'),42,18,1200,0)});
+  // scene 3: wipe to fixed road
+  at(T.s3[0]-300,()=>{
+    show(2);$('photos').classList.add('fixed');
+    tween(v=>{health=v},0,1,2000);
+    count($('rqi2'),3.2,8.7,2000,1,'',e=>{const v=3.2+5.5*e;$('rqi2').style.color=rampColor(v);$('rqibar2').style.background=rampColor(v);$('rqibar2').style.width=v*10+'%'});
+    count($('spd2'),18,42,2000,0);
+    count($('co2'),0,23,2000,0,'−');
+    at(1700,()=>$('photos').classList.add('done'));
+  });
+  at(T.s3[1]-400,()=>{ // finale: back to animated road, now healthy
+    $('photos').classList.remove('on');setTimeout(()=>photoOn=false,400);
+    health=1;speed=1.2;show(3);
+    let n=4;countdown=setInterval(()=>{n--;$('auto').textContent=n>0?'Entering in '+n+'s…':'Launching…';if(n<=0)go()},1000);
+  });
+  // progress
+  (function p(){const k=Math.min(1,(performance.now()-t0)/TOTAL);$('tl').style.width=(k*100)+'%';if(k<1&&!done)raf=requestAnimationFrame(p)})();
+}
+function finaleOnly(){ $('photos').classList.remove('on');photoOn=false;health=1;speed=1.1;show(3);$('tl').style.width='100%';$('auto').textContent='Press Enter to continue' }
 
-        // Add subtle noise to terrain
-        const vertices = plane.geometry.attributes.position.array;
-        for (let i = 0; i < vertices.length; i += 3) {
-            vertices[i + 2] = (Math.random() - 0.5) * 4;
-        }
-        scene.add(plane);
-
-        // 2. Road Network (Splines representing highways/streets)
-        const roads = [];
-        const trafficParticles = [];
-        const roadGlowLines = []; // For animated glow pulse
-
-        // Helper to create curved roads
-        function createRoad(points, colorHex, isCongested) {
-            const curve = new THREE.CatmullRomCurve3(points);
-            const pts = curve.getPoints(200); // Higher resolution for smoother curves
-            const geo = new THREE.BufferGeometry().setFromPoints(pts);
-
-            // Outer glow line (wider, dimmer — creates neon underglow)
-            const glowMat = new THREE.LineBasicMaterial({
-                color: colorHex,
-                transparent: true,
-                opacity: 0.08,
-                linewidth: 2,
-                blending: THREE.AdditiveBlending
-            });
-            const glowLine = new THREE.Line(geo.clone(), glowMat);
-            glowLine.position.y = -0.05;
-            scene.add(glowLine);
-
-            // Base Road Line — brighter core
-            const mat = new THREE.LineBasicMaterial({
-                color: colorHex,
-                transparent: true,
-                opacity: 0.5,
-                linewidth: 2
-            });
-            const roadLine = new THREE.Line(geo, mat);
-            scene.add(roadLine);
-            roads.push(curve);
-
-            // Store for animated pulsing
-            roadGlowLines.push({ line: roadLine, glow: glowLine, color: colorHex, congested: isCongested });
-
-            // Dashed lane-marking line (adds realism)
-            const dashGeo = new THREE.BufferGeometry().setFromPoints(pts);
-            const dashMat = new THREE.LineDashedMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.06,
-                dashSize: 1.5,
-                gapSize: 2,
-                linewidth: 1
-            });
-            const dashLine = new THREE.Line(dashGeo, dashMat);
-            dashLine.computeLineDistances();
-            dashLine.position.y = 0.02;
-            scene.add(dashLine);
-
-            // Traffic Data Points — main particles
-            const particleCount = isCongested ? 50 : 20;
-            const size = isCongested ? 0.55 : 0.35;
-            const pGeo = new THREE.BufferGeometry();
-            const pPos = new Float32Array(particleCount * 3);
-            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-
-            const pMat = new THREE.PointsMaterial({
-                color: isCongested ? 0xff3300 : 0x00ffcc,
-                size: size,
-                transparent: true,
-                opacity: 0.9,
-                blending: THREE.AdditiveBlending
-            });
-
-            const particles = new THREE.Points(pGeo, pMat);
-            scene.add(particles);
-
-            // Trailing glow particles (larger, dimmer — creates comet-tail effect)
-            const trailCount = Math.floor(particleCount * 0.6);
-            const trailGeo = new THREE.BufferGeometry();
-            const trailPos = new Float32Array(trailCount * 3);
-            trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
-
-            const trailMat = new THREE.PointsMaterial({
-                color: isCongested ? 0xff6600 : 0x00e5ff,
-                size: size * 2.2,
-                transparent: true,
-                opacity: 0.15,
-                blending: THREE.AdditiveBlending
-            });
-            const trailParticles = new THREE.Points(trailGeo, trailMat);
-            scene.add(trailParticles);
-
-            // Store metadata for animation
-            trafficParticles.push({
-                mesh: particles,
-                trail: trailParticles,
-                curve: curve,
-                count: particleCount,
-                trailCount: trailCount,
-                speeds: Array(particleCount).fill(0).map(() => (isCongested ? 0.0012 : 0.0035) + Math.random() * 0.002),
-                progress: Array(particleCount).fill(0).map(() => Math.random())
-            });
-
-            // Add glow spheres at endpoints (intersection nodes)
-            [points[0], points[points.length - 1]].forEach(p => {
-                const nodeSphere = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.5, 12, 12),
-                    new THREE.MeshBasicMaterial({
-                        color: colorHex,
-                        transparent: true,
-                        opacity: 0.4,
-                        blending: THREE.AdditiveBlending
-                    })
-                );
-                nodeSphere.position.copy(p);
-                scene.add(nodeSphere);
-            });
-        }
-
-        // Generate intersecting road paths
-        createRoad([
-            new THREE.Vector3(-60, 0.5, -40), new THREE.Vector3(-20, 0.5, -10),
-            new THREE.Vector3(10, 0.5, 0), new THREE.Vector3(40, 0.5, 20), new THREE.Vector3(60, 0.5, 50)
-        ], 0x00e5ff, false); // Smooth/Fast Highway (Cyan)
-
-        createRoad([
-            new THREE.Vector3(50, 0.5, -50), new THREE.Vector3(20, 0.5, -20),
-            new THREE.Vector3(0, 0.5, 10), new THREE.Vector3(-20, 0.5, 30), new THREE.Vector3(-50, 0.5, 60)
-        ], 0xff6600, true); // Moderately Damaged/Congested (Orange)
-
-        createRoad([
-            new THREE.Vector3(-40, 0.5, 40), new THREE.Vector3(-10, 0.5, 15),
-            new THREE.Vector3(15, 0.5, -10), new THREE.Vector3(30, 0.5, -30), new THREE.Vector3(50, 0.5, -60)
-        ], 0xff0000, true); // Heavily Damaged/High Congestion (Red)
-
-        // Additional roads for denser network
-        createRoad([
-            new THREE.Vector3(-55, 0.5, 0), new THREE.Vector3(-30, 0.5, -15),
-            new THREE.Vector3(0, 0.5, -25), new THREE.Vector3(30, 0.5, -15), new THREE.Vector3(55, 0.5, 0)
-        ], 0x00e5ff, false); // Secondary smooth highway
-
-        createRoad([
-            new THREE.Vector3(-30, 0.5, -55), new THREE.Vector3(-15, 0.5, -25),
-            new THREE.Vector3(0, 0.5, 5), new THREE.Vector3(15, 0.5, 25), new THREE.Vector3(30, 0.5, 55)
-        ], 0xff9900, true); // Moderate arterial
-
-        createRoad([
-            new THREE.Vector3(40, 0.5, 40), new THREE.Vector3(20, 0.5, 10),
-            new THREE.Vector3(-5, 0.5, -5), new THREE.Vector3(-25, 0.5, -25), new THREE.Vector3(-45, 0.5, -50)
-        ], 0x00ccaa, false); // Connector road (teal)
-
-        createRoad([
-            new THREE.Vector3(-50, 0.5, -30), new THREE.Vector3(-15, 0.5, -5),
-            new THREE.Vector3(20, 0.5, 15), new THREE.Vector3(50, 0.5, 35)
-        ], 0xff4400, true); // Inner ring segment
-
-        // 3. Central Analysis Node / Hologram Cylinder
-        const nodeGeo = new THREE.CylinderGeometry(8, 8, 40, 32, 1, true);
-        const nodeMat = new THREE.MeshBasicMaterial({
-            color: 0x00e5ff,
-            transparent: true,
-            opacity: 0.05,
-            wireframe: true,
-            side: THREE.DoubleSide
-        });
-        const centerNode = new THREE.Mesh(nodeGeo, nodeMat);
-        scene.add(centerNode);
-
-        // Center base ring
-        const ringGeo = new THREE.RingGeometry(8, 8.5, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6600, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = 0.1;
-        scene.add(ring);
-
-        // --- ANIMATION LOOP ---
-        let mouseX = 0, mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
-            mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
-        });
-
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const t = clock.getElapsedTime();
-
-            // Animate Traffic Particles along splines
-            trafficParticles.forEach(sys => {
-                const positions = sys.mesh.geometry.attributes.position.array;
-                const trailPositions = sys.trail ? sys.trail.geometry.attributes.position.array : null;
-
-                for (let i = 0; i < sys.count; i++) {
-                    sys.progress[i] += sys.speeds[i];
-                    if (sys.progress[i] > 1) sys.progress[i] = 0; // Loop around
-
-                    const point = sys.curve.getPointAt(sys.progress[i]);
-                    positions[i * 3] = point.x;
-                    positions[i * 3 + 1] = point.y + Math.sin(t * 8 + i * 1.7) * 0.15;
-                    positions[i * 3 + 2] = point.z;
-
-                    // Update trail particles (offset slightly behind)
-                    if (trailPositions && i < sys.trailCount) {
-                        const trailProgress = Math.max(0, sys.progress[i] - 0.015);
-                        const trailPt = sys.curve.getPointAt(trailProgress);
-                        trailPositions[i * 3] = trailPt.x;
-                        trailPositions[i * 3 + 1] = trailPt.y + Math.sin(t * 8 + i * 1.7) * 0.15;
-                        trailPositions[i * 3 + 2] = trailPt.z;
-                    }
-                }
-                sys.mesh.geometry.attributes.position.needsUpdate = true;
-                if (sys.trail) sys.trail.geometry.attributes.position.needsUpdate = true;
-            });
-
-            // Animate road glow pulsing
-            roadGlowLines.forEach((r, idx) => {
-                const pulse = 0.3 + Math.sin(t * 2 + idx * 1.5) * 0.15;
-                r.line.material.opacity = pulse;
-                r.glow.material.opacity = pulse * 0.2;
-            });
-
-            // Rotate Center Node
-            centerNode.rotation.y = t * 0.5;
-            ring.scale.set(1 + Math.sin(t * 3) * 0.1, 1 + Math.sin(t * 3) * 0.1, 1);
-
-            // Camera Parallax
-            camera.position.x += (mouseX - camera.position.x) * 0.02;
-            camera.position.y += ((30 - mouseY) - camera.position.y) * 0.02;
-            camera.lookAt(0, 0, 0);
-
-            renderer.render(scene, camera);
-        }
-
-        // --- CHART VISUALIZER (CSS Based for crisper UI) ---
-        const barsContainer = document.getElementById('bars-container');
-        const numBars = 30;
-        for (let i = 0; i < numBars; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'flex-1 bg-gradient-to-t from-orange-600 to-cyan-400 rounded-t-sm transition-all duration-75';
-            bar.style.height = '10%';
-            barsContainer.appendChild(bar);
-        }
-
-        function animateBars() {
-            Array.from(barsContainer.children).forEach((bar, i) => {
-                // Generate a wave-like congestion pattern
-                const height = 15 + Math.random() * 40 + Math.sin(Date.now() * 0.002 + i * 0.2) * 30;
-                bar.style.height = `${Math.max(5, Math.min(100, height))}%`;
-
-                // Color shift based on height (higher = redder/congested)
-                if (height > 70) bar.style.background = 'linear-gradient(to top, #ff3300, #ff9900)';
-                else if (height > 40) bar.style.background = 'linear-gradient(to top, #ff9900, #00e5ff)';
-                else bar.style.background = 'linear-gradient(to top, #0066ff, #00e5ff)';
-            });
-            requestAnimationFrame(animateBars);
-        }
-
-        // --- LOGIC & PROGRESS ---
-        const logEl = document.getElementById('terminal-log');
-        const pctEl = document.getElementById('percentage');
-        const progEl = document.getElementById('main-progress');
-        const txtEl = document.getElementById('loading-text');
-
-        const sysLogs = [
-            "Initiating satellite uplink on secure channel...",
-            "Downloading topological sector grids...",
-            "Loading heuristic models: [RQI_V4.weights]",
-            "Scanning road surface parameters...",
-            "Detected: Pothole_Dense (Confidence: 89%)",
-            "Detected: Smooth_Pavement (Confidence: 94%)",
-            "Calculating Road Quality Indices (RQI)...",
-            "Cross-referencing RQI with speed limits...",
-            "Simulating traffic flow vectors...",
-            "Generating congestion heatmaps...",
-            "Analytics payload formatted for UI mapping."
-        ];
-
-        let logIdx = 0;
-        function addLog(msg) {
-            const row = document.createElement('div');
-            const time = new Date().toISOString().split('T')[1].slice(0, 8);
-            row.innerHTML = `<span class="text-gray-500">[${time}]</span> <span class="text-orange-500 font-bold">»</span> ${msg}`;
-            logEl.appendChild(row);
-            if (logEl.children.length > 6) logEl.removeChild(logEl.firstChild);
-        }
-
-        // Start sequences on load
-        window.onload = function () {
-            animate();
-            animateBars();
-            addLog("System boot sequence initiated.");
-
-            let progress = { val: 0 };
-
-            gsap.to(progress, {
-                val: 100,
-                duration: LOADING_DURATION / 1000,
-                ease: "power1.inOut",
-                onUpdate: function () {
-                    const cur = Math.floor(progress.val);
-                    pctEl.innerText = cur;
-                    progEl.style.width = cur + "%";
-
-                    // Text States
-                    if (cur < 25) txtEl.innerText = "UPLINK ESTABLISHED...";
-                    else if (cur < 50) txtEl.innerText = "SCANNING TOPOLOGY...";
-                    else if (cur < 75) txtEl.innerText = "CALCULATING RQI...";
-                    else txtEl.innerText = "SIMULATING TRAFFIC...";
-
-                    // Logs simulation
-                    if (cur % 9 === 0 && logIdx < sysLogs.length) {
-                        addLog(sysLogs[logIdx++]);
-                    }
-
-                    // Randomize coords slightly to simulate scanning
-                    if (cur % 5 === 0) {
-                        const lat = (28.61 + Math.random() * 0.05).toFixed(4);
-                        const lng = (77.20 + Math.random() * 0.05).toFixed(4);
-                        document.getElementById('geo-coords').innerText = `LAT: ${lat}°N / LNG: ${lng}°E`;
-                    }
-                },
-                onComplete: function () {
-                    const tl = gsap.timeline();
-
-                    tl.to('#success-overlay', { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" })
-                        .to('.ui-layer', { opacity: 0, duration: 0.4 }, "-=0.2")
-                        .to('#canvas-container', {
-                            scale: 2.5,
-                            opacity: 0,
-                            duration: 1,
-                            ease: "power3.in"
-                        })
-                        .call(() => {
-                            try {
-                                window.location.replace(NEXT_PAGE);
-                            } catch (e) {
-                                document.body.innerHTML = `<div class="flex h-screen w-full items-center justify-center bg-[#030508] text-cyan-400 font-mono text-xl tracking-widest text-center">ANALYTICS ENGINE READY<br><br><span class="text-sm text-gray-500">Redirecting to Dashboard...</span></div>`;
-                            }
-                        });
-                }
-            });
-        };
-
-        // Handle Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-    </script>
+/* ===== skip / start ===== */
+$('skip').addEventListener('click',e=>{e.preventDefault();go()});
+$('enter').addEventListener('click',e=>{e.preventDefault();go()});
+addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape'||e.key===' '){if($('start').classList.contains('hide')){e.preventDefault();go()}else{begin()}}});
+function begin(){if($('start').classList.contains('hide'))return;$('start').classList.add('hide');reduce?finaleOnly():play()}
+$('start').addEventListener('click',begin);
+// auto-begin (ads should just play): short delay, click still works
+setTimeout(begin,900);
+})();
+</script>
 </body>
-
 </html>
