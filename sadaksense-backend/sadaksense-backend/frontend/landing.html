@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SadakSense — Analyze roads. Predict traffic.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F97316'/%3E%3Cpath d='M5.5 28 12.8 5.5h6.4L26.5 28z' fill='%2309090B'/%3E%3Cpath d='M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z' fill='%23F97316'/%3E%3C/svg%3E">
+<meta name="description" content="SadakSense scores road surface condition with a Road Quality Index and maps it to traffic speed and congestion.">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Hanken+Grotesk:wght@300..800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400..700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>if(typeof tailwind!=='undefined'){tailwind.config={corePlugins:{preflight:false},theme:{extend:{colors:{ink:'#09090B',paper:'#F4F4F5',brand:'#EA580C',orange:'#F97316',cyan:'#06B6D4'},fontFamily:{display:['Bricolage Grotesque','Arial Narrow','sans-serif'],sans:['Hanken Grotesk','system-ui','sans-serif'],serif:['Instrument Serif','Georgia','serif'],mono:['Geist Mono','JetBrains Mono','ui-monospace','monospace']}}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--ink:#09090B;--ink-2:#18181B;--paper:#F4F4F5;--paper-2:#FAFAFA;--line:#E4E4E7;--mut-l:#52525B;--mut-d:#A1A1AA;--orange:#F97316;--brand:#EA580C;--deep:#C2410C;--wash:#FFF7ED;--crit:#EF4444;--mod:#EAB308;--good:#10B981;--cyan:#06B6D4;
+--rqi-ramp:linear-gradient(90deg,#EF4444 0%,#F97316 33%,#EAB308 55%,#10B981 100%);
+--f-disp:"Bricolage Grotesque","Arial Narrow",sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-acc:"Instrument Serif",Georgia,serif;--f-mono:"Geist Mono","JetBrains Mono",ui-monospace,monospace;
+--fs-hero:clamp(3.25rem,1rem + 7.6vw,8.25rem);--fs-h2:clamp(2.4rem,1.4rem + 4.6vw,5.6rem);--fs-h3:clamp(1.35rem,1.1rem + 1.1vw,2rem);--fs-lead:clamp(1.075rem,1rem + .45vw,1.35rem);--fs-body:1.0625rem;--fs-label:.72rem;
+--sh1:0 1px 1px rgb(9 9 11/.06),0 2px 4px rgb(9 9 11/.05),0 10px 20px -10px rgb(9 9 11/.14);--sh-or:0 8px 24px -8px rgb(249 115 22/.55);
+--ease:cubic-bezier(.16,1,.3,1);--ease-io:cubic-bezier(.65,0,.35,1);--sec:clamp(5.5rem,4rem + 8vw,11rem);--pad:clamp(1.25rem,4vw,3rem)}
+*{box-sizing:border-box;margin:0}
+html{overflow-x:clip;-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{font-family:var(--f-body);font-size:var(--fs-body);line-height:1.6;background:var(--paper);color:var(--ink);overflow-x:clip;text-wrap:pretty;-webkit-font-smoothing:antialiased}
+body::after{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+img{max-width:100%;display:block}button,a{color:inherit}button{font:inherit;cursor:pointer;background:none;border:0}a{text-decoration:none}
+body h1,body h2,body h3,body h4{font-family:var(--f-disp);text-wrap:balance;font-variation-settings:"opsz" 72}
+body h2{font-size:var(--fs-h2);font-weight:800;line-height:.98;letter-spacing:-.018em;font-stretch:88%}
+body h3{font-size:var(--fs-h3);font-weight:700;line-height:1.08;letter-spacing:-.012em}body h4{font-size:1.1rem;font-weight:700;line-height:1.2;letter-spacing:-.005em}
+em.acc,.acc{font-family:var(--f-acc);font-style:italic;font-weight:400;color:var(--brand);letter-spacing:0}
+.mono,.lbl,.num{font-family:var(--f-mono)}.num{font-variant-numeric:tabular-nums}
+.lbl{font-size:var(--fs-label);text-transform:uppercase;letter-spacing:.12em;font-weight:500}
+.wrap{max-width:1320px;margin:0 auto;padding:0 var(--pad)}
+.sec{position:relative;z-index:10;padding:var(--sec) 0}
+.eyebrow{display:flex;align-items:center;gap:.7rem;color:var(--deep);margin-bottom:1.25rem}
+.eyebrow i.idx{font-style:normal;color:inherit;opacity:.8}.eyebrow b{display:block;width:34px;height:3px;background:currentColor;border-radius:2px}
+.dark .eyebrow{color:var(--orange)}
+.lead{font-size:var(--fs-lead);color:var(--mut-l);max-width:56ch}.dark .lead,.dark p{color:var(--mut-d)}
+.skip{position:fixed;left:12px;top:-80px;z-index:10001;background:var(--ink);color:#fff;padding:.7rem 1rem;border-radius:8px}.skip:focus{top:12px}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;transition:outline-offset .15s}
+:focus-visible:active{outline-offset:1px}.on-orange :focus-visible{outline-color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.75rem 1.4rem;border-radius:999px;font-weight:600;font-size:.98rem;transition:transform var(--dur-sm,.3s) var(--ease),background .3s,color .3s,box-shadow .3s;user-select:none}
+.btn:active{transform:scale(.96)}.btn svg,.btn i{width:18px;height:18px;transition:transform .3s var(--ease)}.btn:hover svg,.btn:hover i{transform:translate(3px,-3px)}
+.btn-p{background:var(--orange);color:var(--ink)}.btn-p:hover{background:var(--brand);box-shadow:var(--sh-or)}
+.btn-s{border:1.5px solid var(--ink)}.btn-s:hover{background:var(--ink);color:#fff}
+.dark .btn-s{border-color:#fff;color:#fff}.dark .btn-s:hover{background:#fff;color:var(--ink)}
+.btn-k{background:var(--ink);color:var(--orange)}.btn-k:hover{background:#fff}
+.tl{background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;transition:background-size .35s var(--ease)}.tl:hover{background-size:100% 1.5px}
+.ic{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--wash);color:var(--deep)}.ic svg{width:20px;height:20px;stroke-width:1.75}
+[data-reveal]{will-change:auto}.js [data-reveal]{opacity:0}.js [data-reveal].rv{opacity:1}
+.reveal-failsafe [data-reveal],.no-js [data-reveal]{opacity:1!important;transform:none!important;clip-path:none!important}
+.line{display:block;overflow:clip;padding-bottom:.14em;margin-bottom:-.14em}
+.is-paused,.is-paused *{animation-play-state:paused!important}
+/* nav */
+#nav{position:fixed;top:20px;left:0;right:0;z-index:50;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+#navbar{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;max-width:1100px;padding:10px 12px 10px 18px;border-radius:999px;background:rgb(244 244 245/.72);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);box-shadow:inset 0 1px 0 rgb(255 255 255/.6),var(--sh1);transition:padding .4s var(--ease),box-shadow .4s}
+#navbar.scrolled{padding:7px 9px 7px 15px;box-shadow:inset 0 1px 0 rgb(255 255 255/.6),0 1px 1px rgb(9 9 11/.08),0 8px 18px -6px rgb(9 9 11/.22),0 24px 40px -18px rgb(9 9 11/.3)}
+.logo{display:flex;align-items:center;gap:.55rem;font-family:var(--f-disp);font-weight:700;font-size:1.25rem;letter-spacing:-.03em;min-height:40px}
+.dash{display:inline-block;width:6px;height:22px;border-radius:2px;background:linear-gradient(var(--orange) 0 38%,transparent 38% 62%,var(--orange) 62%)}
+.nlinks{position:relative;display:none;gap:.25rem}.nlinks a{position:relative;z-index:1;padding:.55rem .95rem;font-weight:500;font-size:.95rem;border-radius:999px;color:var(--ink)}
+.nind{position:absolute;left:0;top:50%;height:36px;width:100px;margin-top:-18px;border-radius:999px;background:var(--orange);transform-origin:0 50%;opacity:0;z-index:0}
+.nr{display:flex;align-items:center;gap:.4rem}.nr .btn{min-height:40px;padding:.5rem 1.1rem}.nr .hm{display:none}
+.mbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+#sheet{position:fixed;inset:0;z-index:49;background:var(--ink);color:#fff;padding:110px var(--pad) 2rem;display:flex;flex-direction:column;gap:.5rem;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s}
+#sheet.open{visibility:visible;opacity:1}#sheet a.sl{font-family:var(--f-disp);font-size:2.4rem;font-weight:800;letter-spacing:-.03em;padding:.35rem 0;border-bottom:1px solid rgb(255 255 255/.08);transform:translateY(14px);opacity:0;transition:transform .5s var(--ease),opacity .4s}
+#sheet.open a.sl{transform:none;opacity:1}
+@media(min-width:768px){.nlinks{display:flex}.mbtn,#sheet{display:none}}@media(min-width:900px){.nr .hm{display:inline-flex}}
+/* hero */
+.hero{position:relative;z-index:10;min-height:100vh;min-height:100svh;padding:124px 0 150px}
+.hero-bg{position:absolute;inset:0;overflow:clip;pointer-events:none}
+.road{position:absolute;right:-4%;bottom:-6%;width:62%;height:70%;perspective:420px;opacity:.5;-webkit-mask-image:linear-gradient(to top,#000 20%,transparent 95%);mask-image:linear-gradient(to top,#000 20%,transparent 95%)}
+.road-in{position:absolute;inset:0;transform:rotateX(62deg);transform-origin:50% 100%;background:linear-gradient(90deg,transparent 14%,rgb(9 9 11/.9) 14% 14.6%,transparent 14.6% 85.4%,rgb(9 9 11/.9) 85.4% 86%,transparent 86%)}
+.lanes{position:absolute;left:49.2%;width:1.6%;top:-160px;bottom:0;background:repeating-linear-gradient(to bottom,var(--brand) 0 80px,transparent 80px 160px);animation:lane 1.2s linear infinite}
+@keyframes lane{to{transform:translateY(160px)}}
+.ret{position:absolute;z-index:3;pointer-events:none;border:1.5px solid var(--cyan);width:54px;height:40px;border-radius:6px;opacity:0;animation:pop 6s infinite}
+.scan{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,transparent calc(100% - 90px),rgb(6 182 212/.22));border-bottom:2px solid var(--cyan);box-shadow:0 10px 28px 2px rgb(6 182 212/.35);animation:scanY 4.5s var(--ease-io) infinite alternate;will-change:transform}
+@keyframes scanY{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.ret span{position:absolute;left:-1px;top:-22px;white-space:nowrap;background:var(--ink);color:var(--cyan);padding:2px 6px;border-radius:4px;font-size:.62rem}
+@keyframes pop{0%,8%{opacity:0;transform:scale(.7)}14%,40%{opacity:1;transform:scale(1)}50%,100%{opacity:0;transform:scale(1.05)}}
+.hero-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;position:relative}
+.hero-top{grid-column:1/-1}
+.hero-copy{grid-column:1/-1}.hero-stack{grid-column:1/-1;position:relative}
+.hero-title{font-size:var(--fs-hero);font-weight:800;line-height:.92;letter-spacing:-.01em;font-stretch:84%;font-variation-settings:"opsz" 72,"wdth" 84}
+.hero-title em{position:relative;font-size:1.04em;line-height:.8}
+.hero-underline{position:absolute;left:0;bottom:-.08em;width:100%;height:.22em;overflow:visible}
+.hero-lead{margin:2rem 0 1.75rem;font-size:var(--fs-lead);max-width:44ch;color:var(--mut-l)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.75rem}
+@media(min-width:1024px){.hero-copy{grid-column:1/8;grid-row:2}.hero-stack{grid-column:8/13;grid-row:2;margin-top:-1rem}.hero-lead{margin-top:0}}
+.hero-card{position:relative;background:var(--ink);color:#fff;border-radius:22px;padding:8px;box-shadow:var(--sh1),inset 0 1px 0 rgb(255 255 255/.06);border-top:1px solid var(--orange)}
+.hc-in{border-radius:14px;overflow:clip;position:relative;background:var(--ink-2);padding:1.25rem 1.25rem 1rem;isolation:isolate}
+.hc-in>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28;filter:grayscale(1) contrast(1.1);z-index:-1}
+.hc-top{display:flex;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;color:var(--mut-d)}
+.hero-rqi{font-family:var(--f-disp);font-weight:800;font-size:4.5rem;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hero-rqi small{font-family:var(--f-mono);font-size:1rem;color:var(--mut-d);font-weight:400;margin-left:.2rem}
+.up{display:inline-flex;align-items:center;gap:.35rem;color:var(--good);font-family:var(--f-mono);font-size:.8rem}.up svg{width:15px;height:15px}
+.drop{position:relative;display:flex;align-items:center;gap:.9rem;margin-top:1rem;padding:1rem;border-radius:8px;color:#fff;background:linear-gradient(90deg,var(--orange) 50%,transparent 0) top/16px 1.5px repeat-x,linear-gradient(90deg,var(--orange) 50%,transparent 0) bottom/16px 1.5px repeat-x,linear-gradient(0deg,var(--orange) 50%,transparent 0) left/1.5px 16px repeat-y,linear-gradient(0deg,var(--orange) 50%,transparent 0) right/1.5px 16px repeat-y;animation:ants 1s linear infinite;background-color:rgb(9 9 11/.55)}
+@keyframes ants{to{background-position:16px 0,-16px 100%,0 -16px,100% 16px}}
+.drop p{color:var(--mut-d);font-size:.85rem}.drop h3{font-size:1.05rem}
+.hero-card2{position:relative;margin:-.5rem 0 0 8%;background:var(--paper-2);color:var(--ink);border-radius:22px;padding:8px;box-shadow:var(--sh1);transform:translateZ(0)}
+.hc2{border-radius:14px;padding:1rem 1rem .5rem;background:#fff}.hc2 .row{display:flex;justify-content:space-between;color:var(--mut-l)}
+.chart-h{position:relative;height:118px}.chart-h canvas{position:absolute;inset:0}
+.pp{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--orange);pointer-events:none}.pp::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--orange);animation:rip 2s var(--ease) infinite}
+@keyframes rip{from{transform:scale(1);opacity:.8}to{transform:scale(3.2);opacity:0}}
+[data-tilt]{position:relative}[data-tilt]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),rgb(255 255 255/.14),transparent 60%)}[data-tilt]:hover::after{opacity:1}
+.hero-card{animation:flt 7s ease-in-out infinite}.hero-card2{animation:flt 8s ease-in-out -2.5s infinite}@keyframes flt{50%{translate:0 -9px}}
+.hero-stack,.hero-copy,.mapframe{will-change:transform}.marquee__track{will-change:transform}
+.btn-p{position:relative;overflow:clip}.btn-p::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 30%,rgb(255 255 255/.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .8s var(--ease)}.btn-p:hover::after{transform:translateX(120%)}
+.curtain{position:fixed;inset:0;z-index:10002;background:var(--ink);display:grid;place-items:center;pointer-events:none;animation:cur 1.3s var(--ease-io) .3s forwards}
+.curtain .dash{width:12px;height:58px;transform-origin:50% 100%;animation:dsh .8s var(--ease) both}
+@keyframes cur{0%,55%{clip-path:inset(0 0 0 0)}99%{clip-path:inset(0 0 100% 0)}100%{clip-path:inset(0 0 100% 0);visibility:hidden}}
+@keyframes dsh{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.wrap{position:relative;z-index:1}
+.ghost{position:absolute;top:1.5rem;right:var(--pad);z-index:0;pointer-events:none;user-select:none;font-family:var(--f-disp);font-weight:800;font-stretch:75%;font-variation-settings:"opsz" 96,"wdth" 75;font-size:clamp(9rem,26vw,26rem);line-height:.8;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:1.5px var(--gc,rgb(9 9 11/.13))}
+.cue{position:absolute;left:var(--pad);bottom:150px;display:none;align-items:center;gap:.8rem;color:var(--mut-l);writing-mode:vertical-rl}
+.cue i{display:block;width:1px;height:48px;background:var(--ink);animation:cue 2.2s var(--ease-io) infinite}
+@keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}50.1%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+@media(min-width:1280px) and (min-height:820px){.cue{display:flex}}
+.mk{width:34px;height:34px;flex:none;border-radius:9px;transition:transform .6s var(--ease)}.logo:hover .mk{transform:rotate(-8deg) scale(1.08)}
+.logo em{font-family:var(--f-acc);font-style:italic;font-weight:400;font-size:1.22em;color:var(--brand);letter-spacing:0;margin-left:.03em}
+.curtain .mk{width:78px;height:78px;border-radius:22px;animation:mkin .9s var(--ease) both}@keyframes mkin{from{transform:scale(.4) rotate(-14deg);opacity:0}}
+#ss-chat-btn .mk{width:30px;height:30px;border-radius:9px}#ss-chat-header .mk{width:34px;height:34px}
+/* bands */
+.bands{position:relative;z-index:12;height:190px;margin-top:-110px;overflow:clip;pointer-events:none}
+.band{position:absolute;left:-6%;width:112%;display:flex;overflow:clip;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.band.b1{top:62px;background:var(--ink);color:#fff;transform:rotate(-2deg);padding:.95rem 0;pointer-events:auto;z-index:2}.band.b2{top:56px;background:var(--orange);color:var(--ink);transform:rotate(1.5deg);padding:1.35rem 0}
+.marquee__track{display:flex;flex-wrap:wrap;gap:0 2rem;align-items:center;flex:none;white-space:nowrap;font-family:var(--f-mono);font-size:.85rem;text-transform:uppercase;letter-spacing:.12em}
+.js .marquee__track{flex-wrap:nowrap;width:max-content;animation:mq 45s linear infinite}.js .rev{animation-direction:reverse}
+.is-gsap .marquee__track{animation:none}.band:hover .marquee__track{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.marquee__track span{display:inline-flex;align-items:center;gap:2rem}.marquee__track span::after{content:"";width:5px;height:16px;border-radius:2px;background:var(--orange)}.b2 .marquee__track span::after{background:var(--ink)}
+/* platform */
+.paper2{background:var(--paper-2);background-image:radial-gradient(rgb(9 9 11/.09) 1px,transparent 1px);background-size:22px 22px}
+.sec-h{display:grid;gap:1.5rem;margin-bottom:3.25rem}@media(min-width:1024px){.sec-h{grid-template-columns:7fr 5fr;align-items:end}}
+.bento{display:grid;gap:24px}@media(min-width:768px){.bento{grid-template-columns:repeat(12,1fr)}.t1{grid-column:1/7;grid-row:1/3}.t2{grid-column:7/13}.t3{grid-column:7/13}}
+.tile{position:relative;background:#fff;border-radius:32px;padding:10px;box-shadow:var(--sh1),inset 0 1px 0 rgb(255 255 255/.6);overflow:clip;transition:transform .4s var(--ease)}
+.tile-in{border-radius:22px;padding:1.6rem;height:100%;display:flex;flex-direction:column;gap:1rem;position:relative;background:var(--paper-2)}
+.tile::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgb(249 115 22/.1),transparent 60%);opacity:0;transition:opacity .3s}.tile:hover::before{opacity:1}
+.tag{display:inline-block;width:max-content;padding:.25rem .65rem;border-radius:8px;background:var(--ink);color:var(--orange)}
+.tile p{color:var(--mut-l)}
+.fan{position:relative;flex:1;min-height:270px;margin-top:.5rem}
+.fan .fc{position:absolute;left:50%;top:6%;width:62%;aspect-ratio:4/3;margin-left:-31%;border-radius:14px;overflow:clip;box-shadow:var(--sh1);transition:transform .6s var(--ease);background:var(--ink)}
+.fan .fc img,.shot{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1) brightness(.85);transition:filter .5s;transform:scale(1.15)}
+.fan .fc:hover img,.fan:hover .fc:last-child img,.vid:hover img{filter:none}
+.fan .fc:nth-child(1){transform:rotate(-5deg) translateX(-6%)}.fan .fc:nth-child(2){transform:rotate(4deg) translateX(6%) translateY(4%)}.fan .fc:nth-child(3){transform:translateY(8%)}
+.fan:hover .fc:nth-child(1){transform:rotate(-12deg) translateX(-38%)}.fan:hover .fc:nth-child(2){transform:rotate(11deg) translateX(38%) translateY(3%)}.fan:hover .fc:nth-child(3){transform:translateY(-4%) scale(1.04)}
+.cap{position:absolute;left:0;bottom:0;z-index:3;font-family:var(--f-mono);font-size:.78rem;background:var(--ink);color:#fff;padding:.4rem .7rem;border-radius:8px}.cap b{color:var(--crit);font-weight:500}
+.caret{display:inline-block;width:7px;height:.95em;margin-left:2px;background:var(--orange);vertical-align:-2px;animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}
+.vid{position:relative;height:210px;border-radius:14px;overflow:clip;background:var(--ink)}.vid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:none}
+.vid .pl{position:absolute;inset:0;display:grid;place-items:center}.vid .pl i,.vid .pl svg{width:52px;height:52px;padding:14px;border-radius:50%;background:var(--orange);color:var(--ink)}
+.strip{position:absolute;left:0;right:0;bottom:0;height:46px;background:rgb(9 9 11/.85);overflow:clip;display:flex}
+.strip div{display:flex;gap:6px;padding:7px 3px;flex:none;animation:mq 14s linear infinite}.strip i{width:44px;border-radius:4px;background:#27272a;position:relative}.strip i:nth-child(4n+1){background:#3f3f46;box-shadow:inset 0 -3px 0 var(--orange)}
+.chips{display:grid;gap:.75rem;list-style:none;padding:0}
+.chip{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;border-radius:14px;background:#fff;box-shadow:var(--sh1);font-weight:500;font-size:.95rem;line-height:1.25;transition:transform .3s var(--ease)}.chip:hover{transform:translateY(-4px)}.chip:hover svg{transform:rotate(-8deg) scale(1.15)}.chip svg{transition:transform .3s var(--ease);color:var(--deep);flex:none;width:22px;height:22px}
+/* methodology */
+#methodology{background:var(--brand);color:var(--ink);padding:0}.meth-stage{position:relative;padding:var(--sec) 0}
+.meth-stage .eyebrow{color:var(--ink)}.meth-grid{display:grid;gap:2.5rem;margin-top:3rem}
+.meth-steps{position:relative;display:grid;gap:2rem;padding-left:1.6rem}.meth-progress{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ink);transform:scaleY(1);transform-origin:top}
+.meth-prog-bg{position:absolute;left:0;top:0;bottom:0;width:3px;background:rgb(9 9 11/.18)}
+.meth-step{transition:opacity .3s}.meth-step h3{font-size:clamp(1.5rem,1.1rem + 1.6vw,2.4rem)}.meth-step .n{font-family:var(--f-mono);font-size:.8rem;display:block;margin-bottom:.4rem}.meth-step p{max-width:42ch;margin-top:.5rem;color:#2c0f02}
+.meth-panels{display:grid;gap:1.25rem}.meth-panel{background:var(--ink);color:#fff;border-radius:32px;padding:10px;display:flex}.mp-in{flex:1;border-radius:22px;background:var(--ink-2);padding:1.6rem;min-height:330px;display:flex;flex-direction:column;justify-content:center;gap:1.25rem}
+.mp-in h3{color:#fff}.mp-in p{color:var(--mut-d)}
+.pills{display:flex;flex-wrap:wrap;gap:.6rem}.pill{padding:.5rem 1rem;border-radius:999px;border:1px solid rgb(255 255 255/.14);font-size:.9rem;color:var(--mut-d);transition:all .5s var(--ease)}.pill.on{background:var(--crit);border-color:var(--crit);color:var(--ink);font-weight:600}
+.frow{display:flex;gap:.8rem;align-items:center;padding:.7rem .9rem;border-radius:8px;background:var(--ink);font-family:var(--f-mono);font-size:.85rem}.frow .k{color:var(--mut-d)}.frow .v{color:#fff}.frow .v.tagc{background:var(--crit);color:var(--ink);padding:.1rem .5rem;border-radius:6px}
+.gauge{width:min(340px,100%);margin:0 auto}.gauge text{font-family:var(--f-mono)}
+.gv{font-family:var(--f-disp);font-weight:800;font-size:3.6rem;line-height:1;text-align:center;letter-spacing:-.03em}.gv .num{font-family:var(--f-disp);font-variant-numeric:tabular-nums}.gv small{font-family:var(--f-mono);font-size:1rem;color:var(--mut-d);font-weight:400}
+.code{font-family:var(--f-mono);font-size:.9rem;background:var(--ink);border-radius:8px;padding:1rem;line-height:1.8;min-height:112px;overflow-x:auto}.code .kw{color:var(--orange)}.code .id{color:var(--cyan)}.code .cm{color:#71717A}.code .out{color:var(--crit)}
+.rd{position:relative;height:46px;border-bottom:3px dashed #3f3f46;margin-top:.5rem}.car{position:absolute;left:0;bottom:6px;color:var(--orange)}.car svg{width:30px;height:30px}.dl{position:absolute;left:74%;bottom:-3px;font-family:var(--f-mono);font-size:.65rem;color:var(--crit);border-left:2px solid var(--crit);padding-left:6px;height:40px;opacity:0}
+@media(min-width:1024px){
+.pin-on .meth-stage{min-height:100vh;min-height:100svh;padding:110px 0 40px;display:flex;align-items:center}.pin-on .meth-stage>.wrap{width:100%}.pin-on .meth-grid{grid-template-columns:5fr 7fr;margin-top:2rem;align-items:center}.pin-on .meth-panels{display:grid}.pin-on .meth-panel{grid-area:1/1}
+.meth-grid{grid-template-columns:5fr 7fr;align-items:start}}
+/* heatmap */
+#heatmap{background:linear-gradient(160deg,#100800 0%,#1c0a00 45%,var(--ink) 100%);color:#fff}
+.hm-grid{display:grid;gap:3rem}@media(min-width:1024px){.hm-grid{grid-template-columns:5fr 7fr;align-items:start}.hm-copy{position:sticky;top:120px}}
+.feat{display:grid;gap:.75rem;margin-top:2.25rem;grid-template-columns:1fr 1fr}.feat div.f{position:relative;display:flex;gap:.8rem;align-items:flex-start;padding:.9rem 1rem .9rem 1.1rem;border-radius:14px;background:rgb(255 255 255/.04);box-shadow:inset 0 1px 0 rgb(255 255 255/.06);overflow:clip}
+.feat div.f::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:2px;background:var(--orange);transform:scaleY(0);transition:transform .35s var(--ease)}.feat div.f:hover::before{transform:scaleY(1)}
+.feat svg{color:var(--orange);flex:none;width:20px;height:20px;margin-top:3px}.feat b{display:block;font-weight:600;font-size:.95rem;line-height:1.3}.feat small{color:var(--mut-d);font-size:.82rem}
+@media(max-width:560px){.feat{grid-template-columns:1fr}}
+.mapframe{border-radius:32px;background:var(--ink-2);padding:8px;box-shadow:0 0 0 1px rgb(255 255 255/.08),0 24px 48px -12px rgb(0 0 0/.6),inset 0 1px 0 rgb(255 255 255/.06);transform-origin:50% 0}
+.mf-in{border-radius:22px;overflow:clip;background:var(--ink)}
+.chrome{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem;color:var(--mut-d);border-bottom:1px solid rgb(255 255 255/.08)}.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:#3f3f46}
+.live{display:inline-flex;align-items:center;gap:.4rem;color:var(--crit)}.live i{width:6px;height:6px;border-radius:2px;background:var(--crit)}
+.hmap-wrap{position:relative;height:330px;overflow:clip}#hmap{height:100%;width:100%;background:#111}
+.radar{position:absolute;inset:-50%;pointer-events:none;opacity:.08;background:conic-gradient(from 0deg,transparent 0 300deg,var(--cyan) 360deg);animation:spin 8s linear infinite;z-index:500;border-radius:50%}@keyframes spin{to{transform:rotate(360deg)}}
+.ripple{display:block;width:16px;height:16px;border-radius:50%;background:currentColor;position:relative;opacity:.9;transition:opacity .3s}.ripple::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid currentColor;animation:rip 2.4s var(--ease) infinite}
+.ripple--critical{color:#EF4444}.ripple--moderate{color:#F97316}.ripple--minor{color:#EAB308}.ripple--good{color:#10B981}
+.hmap-wrap[data-dim] .ripple{opacity:.25}.hmap-wrap[data-dim=critical] .ripple--critical,.hmap-wrap[data-dim=moderate] .ripple--moderate,.hmap-wrap[data-dim=minor] .ripple--minor,.hmap-wrap[data-dim=good] .ripple--good{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:.3rem 1rem;justify-content:space-between;align-items:center;padding:.6rem 1rem;color:var(--mut-d);border-top:1px solid rgb(255 255 255/.08)}.legend .lg{display:flex;gap:.2rem;flex-wrap:wrap}.lg button{display:inline-flex;align-items:center;gap:.4rem;min-height:40px;padding:0 .6rem;border-radius:8px;color:var(--mut-d);font-size:.8rem}.lg button:hover{background:rgb(255 255 255/.06)}.lg i{width:9px;height:9px;border-radius:50%}
+.tsd{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:.35rem;animation:rip 2s infinite}
+.stats{display:grid;gap:2rem;margin-top:3.5rem}@media(min-width:900px){.stats{grid-template-columns:7fr 5fr}}
+.bk{display:grid;gap:1.1rem}.bk .r div.t{display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.95rem}.bar{height:8px;border-radius:999px;background:rgb(255 255 255/.08);overflow:clip}.bar i{display:block;height:100%;border-radius:999px;transform-origin:0 50%}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;align-content:start}.big3 .num{font-family:var(--f-disp);font-weight:800;font-size:clamp(1.9rem,1.2rem + 2.4vw,3.4rem);line-height:1;letter-spacing:-.03em;display:block}.big3 .lbl{color:var(--mut-d)}
+/* analytics */
+.an-grid{display:grid;gap:2.5rem}@media(min-width:1024px){.an-grid{grid-template-columns:5fr 7fr;align-items:center}}
+.rows{display:grid;gap:.85rem;margin-top:2rem}.row{position:relative;display:flex;gap:1rem;align-items:center;padding:1rem 1rem 1rem 1.25rem;border-radius:14px;background:#fff;box-shadow:var(--sh1);cursor:default;transition:transform .3s var(--ease)}.row:hover{transform:translateX(6px)}
+.row::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--orange);transform:scaleY(0);transition:transform .5s var(--ease)}.row.in::before,.row:hover::before{transform:scaleY(1)}.row h4{font-size:1.1rem;font-weight:700;letter-spacing:-.01em}.row p{color:var(--mut-l);font-size:.92rem}
+.cardc{background:#fff;border-radius:32px;padding:10px;box-shadow:var(--sh1),inset 0 1px 0 rgb(255 255 255/.6)}.cc-in{border-radius:22px;background:var(--paper-2);padding:1.4rem}.cc-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;margin-bottom:1rem}.cc-h h4{font-size:1.25rem}.cc-h p{color:var(--mut-l);font-size:.82rem}
+.ch-a{position:relative;height:clamp(260px,40vw,400px)}.ch-a canvas{position:absolute;inset:0}
+.lgd{display:flex;gap:1rem;color:var(--mut-l)}.lgd span{display:inline-flex;align-items:center;gap:.4rem}.lgd i{width:9px;height:9px;border-radius:50%}
+.note{color:var(--mut-l);font-size:.85rem;margin-top:.75rem}
+/* concepts */
+#concepts{background:var(--ink);color:#fff;padding-bottom:calc(var(--sec)*.6)}
+.stk{display:grid;gap:2rem;margin-top:3.5rem}
+.stack-card{position:relative}@media(min-width:768px){.stack-card{position:sticky;top:calc(8svh + var(--i)*18px)}}
+.sc-in{background:var(--ink-2);border-radius:32px;padding:10px;box-shadow:0 0 0 1px rgb(255 255 255/.08),0 30px 60px -20px rgb(0 0 0/.8),inset 0 1px 0 rgb(255 255 255/.06);transform-origin:50% 0}
+.sc-body{border-radius:22px;background:#111113;padding:clamp(1.25rem,3vw,2.4rem);display:grid;gap:2rem}@media(min-width:1024px){.sc-body{grid-template-columns:1.1fr .9fr;align-items:center}}
+.bdg{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}.bdg span{padding:.3rem .7rem;border-radius:8px;background:rgb(255 255 255/.06);color:var(--mut-d)}.bdg span.o{background:var(--orange);color:var(--ink)}
+.sc-body h3{font-size:clamp(2rem,1.2rem + 3vw,3.6rem);font-weight:800;font-stretch:85%;color:#fff;line-height:.95}.sub{color:var(--orange);margin:.4rem 0 1.1rem}
+.tags{display:flex;flex-wrap:wrap;gap:.45rem;margin:1.1rem 0}.tags span{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .8rem;border-radius:999px;border:1px solid rgb(255 255 255/.14);font-size:.85rem;color:#d4d4d8}.tags svg{width:15px;height:15px;color:var(--orange)}
+.caps{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}.caps b{display:block;font-size:.92rem;font-weight:600}.caps small{color:var(--mut-d);font-size:.8rem}
+.pull{border-left:3px solid var(--orange);padding-left:1rem;margin:1.4rem 0}.pull p{font-size:1.2rem;color:#52525b;line-height:1.35}.pull .w{display:inline-block;color:#52525b}.pull .lbl{color:var(--orange);display:block;margin-bottom:.35rem}
+.vis{position:relative;border-radius:14px;overflow:clip;aspect-ratio:4/3;background:var(--ink);--mx:50%;--my:50%}.vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.2) brightness(.6)}
+.vis .col{position:absolute;inset:0;background:inherit;-webkit-mask-image:radial-gradient(circle 120px at var(--mx) var(--my),#000,transparent);mask-image:radial-gradient(circle 120px at var(--mx) var(--my),#000,transparent)}.vis .col img{filter:none}
+.vis .grid{position:absolute;inset:0;background-image:linear-gradient(rgb(6 182 212/.35) 1px,transparent 1px),linear-gradient(90deg,rgb(6 182 212/.35) 1px,transparent 1px);background-size:34px 34px;transform:perspective(300px) rotateX(35deg) scale(1.4);transform-origin:50% 100%}
+.mini{display:grid;gap:.8rem;aspect-ratio:4/3;padding:1.1rem;border-radius:14px;background:var(--ink);align-content:space-between;position:relative;overflow:clip}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px}.bars i{flex:1;border-radius:4px 4px 0 0;background:var(--orange);transform-origin:50% 100%;animation:bar 3s var(--ease-io) infinite alternate}.bars i:nth-child(3n){background:var(--cyan)}
+@keyframes bar{from{transform:scaleY(.35)}to{transform:scaleY(1)}}.bars i:nth-child(2){animation-delay:.3s}.bars i:nth-child(3){animation-delay:.6s}.bars i:nth-child(4){animation-delay:.9s}.bars i:nth-child(5){animation-delay:1.2s}.bars i:nth-child(6){animation-delay:1.5s}.bars i:nth-child(7){animation-delay:.45s}.bars i:nth-child(8){animation-delay:.75s}
+.flow{position:relative;height:3px;background:repeating-linear-gradient(90deg,var(--cyan) 0 20px,transparent 20px 40px);overflow:clip}.flow::after{content:"";position:absolute;left:-40px;right:0;top:0;bottom:0;background:inherit;animation:fl 1.4s linear infinite}@keyframes fl{to{transform:translateX(40px)}}
+.alpha{display:flex;gap:.8rem;padding:.9rem;border-radius:14px;background:rgb(249 115 22/.08);margin:1rem 0}.alpha svg{flex:none;color:var(--orange)}.alpha b{display:block;font-size:.92rem}.alpha small{color:var(--mut-d)}
+.st3{display:flex;gap:1.5rem;margin:1rem 0}.st3 .num{display:block;font-family:var(--f-disp);font-size:1.8rem;font-weight:800;color:var(--orange);line-height:1}.st3 .lbl{color:var(--mut-d)}
+.foot-note{text-align:center;color:var(--mut-d);margin:3rem auto 0;max-width:60ch}.foot-note span{color:var(--orange)}
+/* cta */
+.cta{position:relative;z-index:10;padding:2rem 0;background:var(--ink)}.cta-in{position:relative;background:var(--brand);color:var(--ink);overflow:clip;padding:clamp(4rem,9vw,8rem) 0;border-radius:32px;will-change:transform}
+.cta .marquee__track{font-family:var(--f-disp);font-weight:800;font-stretch:80%;font-size:clamp(4rem,2rem + 12vw,12rem);letter-spacing:-.03em;text-transform:none;line-height:1;gap:0 3rem;color:transparent;-webkit-text-stroke:2px var(--ink)}.cta .marquee__track span::after{display:none}
+.cta-btns{position:absolute;inset:0;display:flex;gap:.9rem;align-items:center;justify-content:center;flex-wrap:wrap;z-index:2;padding:1rem}
+.cta .btn-s{border-color:var(--ink);background:var(--brand)}
+/* footer */
+footer{position:relative;z-index:10;background:var(--paper);padding:3rem 0 1.5rem;border-top:1px solid var(--line)}
+.ft{display:flex;flex-wrap:wrap;gap:1.2rem 2rem;align-items:center;justify-content:space-between}.ft nav,.ft .soc{display:flex;gap:1.2rem;align-items:center}.ft .mut{color:var(--mut-l)}
+.wm{display:inline-flex;max-width:none;font-family:var(--f-disp);font-stretch:75%;font-variation-settings:"opsz" 72,"wdth" 75;font-size:17vw;line-height:.92;letter-spacing:0;white-space:nowrap;margin:2rem 0 1rem;overflow:clip;padding-bottom:.1em;user-select:none}
+.wm span{display:inline-block;flex:none;text-align:center;font-weight:var(--w,800)}
+.up-b{display:inline-flex;align-items:center;gap:.5rem}
+/* rail & cursor */
+.rail{position:fixed;right:14px;top:50%;height:58vh;transform:translateY(-50%);z-index:40;display:none;width:54px}
+.rqi-rail__track{position:absolute;right:4px;top:0;bottom:0;width:4px;border-radius:4px;background:linear-gradient(180deg,#EF4444,#F97316 33%,#EAB308 55%,#10B981)}
+.rqi-rail__marker{position:absolute;right:-3px;top:0;display:flex;align-items:center;gap:.4rem;--c:#EF4444}.rqi-rail__marker::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px var(--paper),0 0 0 4.5px var(--c)}.rqi-rail__value{order:-1;font-family:var(--f-mono);font-size:.72rem;background:var(--ink);color:var(--c);padding:2px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.tk{position:absolute;right:12px;font-family:var(--f-mono);font-size:.62rem;color:var(--mut-l);transform:translateY(-50%);padding:2px 4px}.tk:hover{color:var(--brand)}
+@media(min-width:1024px){.rail{display:block}}
+.scroll-progress{position:fixed;inset:0 0 auto 0;height:3px;background:var(--orange);transform-origin:0 50%;transform:scaleX(0);z-index:60}@media(min-width:1024px){.scroll-progress{display:none}}
+@supports(animation-timeline:scroll()){.scroll-progress{animation:grow linear both;animation-timeline:scroll(root)}@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}}
+.cursor-dot,.cursor-ring{position:fixed;left:0;top:0;pointer-events:none;z-index:10000;display:none}.cursor-dot{width:6px;height:6px;border-radius:50%;background:var(--orange)}.cursor-ring{width:36px;height:36px;border:1.5px solid var(--orange);border-radius:50%;transition:width .2s,height .2s,background-color .2s}.cursor-ring.is-active{width:64px;height:64px;background:rgb(249 115 22/.12)}
+@media(hover:hover) and (pointer:fine){.has-cursor .cursor-dot,.has-cursor .cursor-ring{display:block}}
+#topo-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+/* chat */
+#ss-chat-widget{position:fixed;right:20px;bottom:20px;z-index:9999;font-family:var(--f-body)}
+#ss-chat-btn{position:relative;display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--orange);box-shadow:var(--sh1),0 12px 24px -10px rgb(9 9 11/.5);margin-left:auto;transition:transform .3s var(--ease)}#ss-chat-btn:active{transform:scale(.94)}
+#ss-chat-btn .dash{height:24px}#ss-notif-dot{position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 2px var(--ink);transform:scale(0);animation:npop .4s 6s var(--ease) forwards}@keyframes npop{to{transform:scale(1)}}
+#ss-chat-panel{position:absolute;right:0;bottom:70px;width:min(380px,calc(100vw - 40px));height:min(540px,calc(100dvh - 110px));display:flex;flex-direction:column;background:var(--paper-2);border-radius:22px;box-shadow:var(--sh1),0 30px 60px -20px rgb(9 9 11/.45);overflow:clip;transform-origin:bottom right;transform:scale(.88);opacity:0;visibility:hidden;transition:transform .35s cubic-bezier(.34,1.45,.64,1),opacity .2s,visibility .35s}
+#ss-chat-widget.open #ss-chat-panel{transform:none;opacity:1;visibility:visible}
+#ss-chat-header{display:flex;gap:.8rem;align-items:center;padding:1rem 1.1rem;background:var(--ink);color:#fff}#ss-chat-header .dash{height:26px}#ss-chat-header b{font-family:var(--f-disp);font-size:1.05rem}#ss-chat-header small{display:block;font-family:var(--f-mono);font-size:.68rem;color:var(--mut-d)}
+#ss-context-bar{display:flex;gap:.4rem;overflow-x:auto;padding:.6rem .8rem;border-bottom:1px solid var(--line)}#ss-context-bar span{flex:none;cursor:pointer;padding:.35rem .8rem;border-radius:999px;border:1.5px solid var(--ink);font-size:.8rem;font-weight:500}#ss-context-bar span:hover{background:var(--ink);color:#fff}
+#ss-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.8rem}
+.ss-msg{max-width:88%;animation:msgin .35s var(--ease)}@keyframes msgin{from{transform:translateY(8px);opacity:0}}.ss-msg.user{align-self:flex-end}
+.ss-msg-label{font-family:var(--f-mono);font-size:.64rem;color:var(--mut-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.2rem}.ss-msg.user .ss-msg-label{text-align:right}
+.ss-msg-bubble{padding:.7rem .9rem;border-radius:14px;background:#fff;box-shadow:var(--sh1);font-size:.92rem;line-height:1.5}.ss-msg.user .ss-msg-bubble{background:var(--ink);color:#fff}
+.ss-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}.ss-chip{padding:.4rem .8rem;border-radius:999px;border:1.5px solid var(--ink);font-size:.8rem;font-weight:500}.ss-chip:hover{background:var(--ink);color:#fff}
+.ss-typing{display:inline-flex;gap:5px;padding:.8rem 1rem;border-radius:14px;background:#fff;box-shadow:var(--sh1)}.ss-typing span{width:7px;height:7px;border-radius:50%;background:var(--orange);animation:dotb 1s infinite}.ss-typing span:nth-child(2){animation-delay:.15s}.ss-typing span:nth-child(3){animation-delay:.3s}@keyframes dotb{50%{transform:translateY(-5px)}}
+#ss-input-area{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid var(--line);background:#fff}#ss-input{flex:1;resize:none;border:1.5px solid var(--line);border-radius:14px;padding:.6rem .8rem;font:inherit;font-size:16px;background:var(--paper-2)}#ss-input:focus{outline:2px solid var(--orange);border-color:transparent}
+#ss-send-btn{width:44px;height:44px;border-radius:50%;background:var(--orange);color:var(--ink);display:grid;place-items:center;flex:none}#ss-send-btn:disabled{opacity:.5}
+.leaflet-container{background:#111}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="mk" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#F97316"/><path d="M5.5 28 12.8 5.5h6.4L26.5 28z" fill="#09090B"/><path d="M15.2 24.5h1.6l.5 3.5h-2.6zM15.4 17.5h1.2l.35 4h-1.9zM15.55 11.5h.9l.25 3.3h-1.4z" fill="#F97316"/></symbol></svg>
+<a class="skip" href="#main">Skip to content</a>
+<div class="curtain" aria-hidden="true"><svg class="mk" aria-hidden="true" viewBox="0 0 32 32"><use href="#mk"/></svg></div>
+<div id="topo-bg" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div><div class="cursor-ring" aria-hidden="true"></div>
+<div class="rail" aria-hidden="true"><div class="rqi-rail__track"></div><div class="rqi-rail__marker"><span class="rqi-rail__value">2.0</span></div></div>
+
+<header id="nav">
+<div id="navbar">
+  <a class="logo" href="#top" id="logo" aria-label="SadakSense — back to top"><svg class="mk" aria-hidden="true" viewBox="0 0 32 32"><use href="#mk"/></svg><span>Sadak<em>Sense</em></span></a>
+  <nav class="nlinks" aria-label="Primary"><span class="nind" aria-hidden="true"></span>
+    <a href="#platform">Platform</a><a href="#methodology">Methodology</a><a href="#heatmap">Heatmaps</a><a href="#guide">Guide</a></nav>
+  <div class="nr">
+    <a class="btn btn-s hm" href="heatmap.html" data-magnetic>Live Heatmaps</a>
+    <a class="btn btn-p" href="main.html" data-magnetic>Launch App <i data-lucide="arrow-up-right"></i></a>
+    <button class="mbtn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="sheet"><i data-lucide="menu"></i></button>
+  </div>
+</div>
+</header>
+<div id="sheet" role="dialog" aria-label="Menu" aria-modal="true">
+  <a class="sl" href="#platform">Platform</a><a class="sl" href="#methodology">Methodology</a><a class="sl" href="#heatmap">Heatmaps</a><a class="sl" href="#guide">Guide</a><a class="sl" href="heatmap.html">Live Heatmaps</a><a class="sl" href="main.html">Launch App</a>
+  <button class="btn btn-s" id="menuClose" style="color:#fff;border-color:#fff;margin-top:1.5rem;align-self:flex-start">Close</button>
+</div>
+
+<main id="main">
+<section class="hero" id="top" aria-labelledby="h1">
+  <div class="cue lbl" aria-hidden="true"><span>Scroll</span><i></i></div>
+  <div class="hero-bg" aria-hidden="true" data-loop>
+    <div class="road"><div class="road-in"><div class="lanes"></div></div></div>
+  </div>
+  <div class="wrap"><div class="hero-grid">
+    <div class="hero-top">
+      <p class="eyebrow lbl hero-eyebrow"><b></b>Global Infrastructure Assessment</p>
+      <h1 class="hero-title" id="h1">
+        <span class="line"><span class="line__in" style="display:block">Analyze roads.</span></span>
+        <span class="line"><span class="line__in" style="display:block">Predict <em class="acc">traffic.<svg class="hero-underline" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C40 2 90 11 130 5 S185 6 198 4" fill="none" stroke="#F97316" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></em></span></span>
+      </h1>
+    </div>
+    <div class="hero-copy">
+      <p class="hero-lead">Evaluate road surface condition from dashcam, drone and street-level imagery. Score every segment with a Road Quality Index and map it to traffic speed and congestion.</p>
+      <div class="hero-cta">
+        <a class="btn btn-p" href="main.html" data-magnetic>Launch App <i data-lucide="arrow-up-right"></i></a>
+        <a class="btn btn-s" href="heatmap.html" data-magnetic><i data-lucide="flame"></i> Live Heatmaps</a>
+        <a class="btn btn-s" href="#platform" data-magnetic>Learn More <i data-lucide="chevron-down"></i></a>
+      </div>
+    </div>
+    <div class="hero-stack" data-loop>
+      <div class="hero-card" data-tilt="6"><div class="hc-in" data-loop>
+        <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" width="1200" height="800" alt="Road Analysis" decoding="async"><div class="scan" aria-hidden="true"></div><div class="ret mono" aria-hidden="true" style="left:58%;top:27%"><span>Sample · detection</span></div><div class="ret mono" aria-hidden="true" style="left:68%;top:45%;animation-delay:2s"><span>Sample · detection</span></div><div class="ret mono" aria-hidden="true" style="left:50%;top:50%;animation-delay:4s"><span>Sample · detection</span></div>
+        <div class="hc-top"><span class="lbl">Live Telemetry</span><span class="lbl" style="text-align:right">Surface Scanning<br><span style="color:#fff">Infrastructure Active</span></span></div>
+        <div class="lbl" style="color:var(--mut-d)">Avg. RQI Score</div>
+        <div class="hero-rqi"><span class="hero-rqi-n">6.8</span><small>/10</small></div>
+        <span class="up"><i data-lucide="trending-up"></i> +1.2 vs last month</span>
+        <a class="drop" href="main.html"><span class="ic" style="background:var(--orange);color:var(--ink)"><i data-lucide="cloud-upload"></i></span><span><h3>Process Data</h3><p>Upload imagery to analyze.</p></span></a>
+        <img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Process Data" loading="lazy" decoding="async" style="position:absolute;right:0;bottom:0;width:34%;height:30%;object-fit:cover;opacity:.18;z-index:-1;filter:grayscale(1)">
+      </div></div>
+      <div class="hero-card2" data-tilt="3"><div class="hc2">
+        <div class="row"><span class="lbl">Speed Impact Correlation</span><span class="lbl" style="color:var(--deep)">Live</span></div>
+        <div class="chart-h"><canvas id="heroChart" role="img" aria-label="Line chart: good road coverage rising from 18 to 82 percent over ten months"></canvas><span class="pp" aria-hidden="true"></span></div>
+      </div></div>
+    </div>
+  </div></div>
+</section>
+
+<div class="bands" aria-hidden="true" data-loop>
+  <div class="band b2"><div class="marquee__track rev"><span>RDD2022</span><span>Drone Video Feeds</span><span>Dashcam Footage</span><span>.JPG .PNG .TIFF</span><span>.MP4 / Live Stream</span><span>Google Earth Engine</span><span>Road Quality Index</span><span>Heatmaps</span><span>GeoJSON</span><span>CSV</span><span>PDF</span></div></div>
+  <div class="band b1"><div class="marquee__track"><span>RDD2022</span><span>Drone Video Feeds</span><span>Dashcam Footage</span><span>.JPG .PNG .TIFF</span><span>.MP4 / Live Stream</span><span>Google Earth Engine</span><span>Road Quality Index</span><span>Heatmaps</span><span>GeoJSON</span><span>CSV</span><span>PDF</span></div></div>
+</div>
+
+<section class="sec paper2" id="platform" aria-labelledby="h-plat">
+<div class="wrap">
+  <div class="sec-h">
+    <div><p class="eyebrow lbl"><i class="idx">01</i><b></b>Platform</p><h2 id="h-plat" data-split-lines>Universal <em class="acc">Compatibility</em></h2></div>
+    <p class="lead" data-reveal>SadakSense processes varied visual metadata. No complex pre-processing or model retraining needed.</p>
+  </div>
+  <div class="bento">
+    <article class="tile t1" data-reveal data-clip data-tilt="2"><div class="tile-in">
+      <span class="tag lbl">.JPG / .PNG / .TIFF</span><h3>Static Imagery Parse</h3>
+      <p>Upload batch static images from open-source datasets or Google Earth Engine. Our system parses file nomenclature and visual defect patterns instantly.</p>
+      <div class="fan" data-loop>
+        <div class="fc"><img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" width="600" height="400" alt="Road imagery sample" loading="lazy" decoding="async"></div>
+        <div class="fc"><img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" width="600" height="400" alt="Aerial road imagery sample" loading="lazy" decoding="async"></div>
+        <div class="fc"><img class="shot" src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" width="600" height="400" alt="Static Road Parse" loading="lazy" decoding="async"></div>
+        <div class="cap" aria-label="Sample file img_pothole_04.jpg tagged HEAVY_DAMAGE"><span id="capFile">img_pothole_04.jpg</span> <b id="capTag">HEAVY_DAMAGE</b><span class="caret"></span></div>
+      </div></div></article>
+    <article class="tile t2" data-reveal data-clip data-tilt="2"><div class="tile-in">
+      <span class="tag lbl">.MP4 / LIVE STREAM</span><h3>Video Frame Sampling</h3>
+      <p>Input moving visual data. SadakSense samples frames at optimized intervals to assess continuous road segments, identifying sequential wear and tear.</p>
+      <div class="vid" data-loop><img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjRteXR3bjZzdDJtZ2gxa211emY5dWkwc2V5anM1bmxrdWsybmJ6aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7aD2d7hy9ktXNDP2/giphy.gif" width="480" height="270" alt="Traffic Video GIF" loading="lazy" decoding="async"><div class="pl" aria-hidden="true"><i data-lucide="play"></i></div>
+        <div class="strip" aria-hidden="true"><div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    </div></article>
+    <div class="t3"><ul class="chips">
+      <li class="chip" data-reveal><i data-lucide="satellite"></i>Satellite Datasets (RDD2022)</li><li class="chip" data-reveal><i data-lucide="video"></i>Drone Video Feeds</li><li class="chip" data-reveal><i data-lucide="car"></i>Dashcam Footage</li></ul></div>
+  </div>
+</div>
+</section>
+
+<section id="methodology" class="on-orange" aria-labelledby="h-meth">
+<div class="meth-stage">
+<div class="wrap">
+  <p class="eyebrow lbl"><i class="idx">02</i><b></b>Scoring Engine</p>
+  <h2 id="h-meth" data-split-lines>The Analytical Process</h2>
+  <div class="meth-grid">
+    <div class="meth-steps"><span class="meth-prog-bg" aria-hidden="true"></span><span class="meth-progress" aria-hidden="true"></span><ol style="list-style:none;padding:0;display:grid;gap:2rem">
+      <li class="meth-step"><span class="n">01</span><h3>Predefined Categorization</h3><p>Classification into Smooth, Moderately Damaged, and Heavily Damaged states based on metadata labels.</p></li>
+      <li class="meth-step"><span class="n">02</span><h3>RQI Assignment</h3><p>Each category translates mathematically into a Road Quality Index, providing a quantifiable metric for analysis.</p></li>
+      <li class="meth-step"><span class="n">03</span><h3>Traffic Simulation</h3><p>Mapping road quality to estimated traffic speed and congestion multipliers using physics-based domain knowledge.</p></li>
+    </ol></div>
+    <div class="meth-panels">
+      <div class="meth-panel"><div class="mp-in"><h3>Categorization</h3><p>Classification into damage states based on metadata.</p>
+        <div class="pills"><span class="pill">Smooth</span><span class="pill">Moderately Damaged</span><span class="pill on" id="pillHeavy">Heavily Damaged</span></div>
+        <div id="fileRows"><div class="frow"><span class="k">FILE</span><span class="v">img_pothole_04.jpg</span></div><div class="frow" style="margin-top:.5rem"><span class="k">TAG</span><span class="v tagc">HEAVY_DAMAGE</span></div></div></div></div>
+      <div class="meth-panel"><div class="mp-in"><span class="lbl" style="color:var(--mut-d)">Index Score</span>
+        <svg class="gauge" viewBox="0 0 200 120" role="img" aria-label="Gauge showing RQI 3.2 out of 10"><defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#EF4444"/><stop offset=".33" stop-color="#F97316"/><stop offset=".55" stop-color="#EAB308"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
+          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="url(#gr)" stroke-width="14" stroke-linecap="round"/>
+          <g id="needle" transform="rotate(-32.4 100 100)"><line x1="100" y1="100" x2="100" y2="40" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g><circle cx="100" cy="100" r="7" fill="#fff"/></svg>
+        <div class="gv"><span class="num" id="gaugeNum">3.2</span><small>/10</small></div>
+        <h3 style="text-align:center">RQI Assignment</h3></div></div>
+      <div class="meth-panel"><div class="mp-in"><h3>Traffic Simulation</h3><p>Estimating traffic speed drops based on RQI.</p>
+        <div class="code" id="code" aria-label="Code: let estSpeed = maxSpeed * (RQI / 10); Output: 14 km/h (Delay)"><div class="cm">// Velocity Calc</div><div><span class="kw">let</span> <span class="id">estSpeed</span> = maxSpeed * (RQI / 10);</div><div class="out">&gt;&gt; Output: 14 km/h (Delay)</div></div>
+        <div class="rd" aria-hidden="true"><span class="car"><i data-lucide="car"></i></span><span class="dl">Delay</span></div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
+<section class="sec dark" id="heatmap" aria-labelledby="h-heat">
+<div class="wrap">
+  <div class="hm-grid">
+    <div class="hm-copy">
+      <p class="eyebrow lbl"><i class="idx">03</i><b></b>Real-Time Intelligence</p>
+      <h2 id="h-heat" data-split-lines>Live Road <em class="acc">Heatmaps</em></h2>
+      <p class="lead" style="margin:1.5rem 0 1.75rem" data-reveal>Identify damage hotspots and congestion zones across your road network, updated in real time.</p>
+      <a class="btn btn-p" href="heatmap.html" data-magnetic><i data-lucide="map"></i> Open Live Heatmaps <i data-lucide="arrow-up-right"></i></a>
+      <div class="feat">
+        <div class="f" data-reveal><i data-lucide="flame"></i><div><b>Hotspot Detection</b><small>AI-clustered zones</small></div></div>
+        <div class="f" data-reveal><i data-lucide="zap"></i><div><b>Real-Time Feed</b><small>Every 5 minutes</small></div></div>
+        <div class="f" data-reveal><i data-lucide="layers"></i><div><b>Layer Controls</b><small>Filter by severity</small></div></div>
+        <div class="f" data-reveal><i data-lucide="download"></i><div><b>Export Reports</b><small>GeoJSON, CSV, PDF</small></div></div>
+      </div>
+    </div>
+    <div class="mapframe" id="mapframe"><div class="mf-in">
+      <div class="chrome"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><span class="lbl">SadakSense · Delhi Road Network</span><span class="lbl live"><i></i>LIVE</span></div>
+      <div class="hmap-wrap" id="hmapWrap" data-loop><div id="hmap" role="img" aria-label="Map of Delhi road network with severity hotspots"></div><div class="radar" aria-hidden="true"></div></div>
+      <div class="legend"><div class="lg" role="group" aria-label="Filter by severity"><button data-sev="critical"><i style="background:#EF4444"></i>Critical</button><button data-sev="moderate"><i style="background:#F97316"></i>Moderate</button><button data-sev="minor"><i style="background:#EAB308"></i>Minor</button><button data-sev="good"><i style="background:#10B981"></i>Good</button></div>
+        <span class="lbl"><span class="tsd" aria-hidden="true"></span>Updated <span id="heatTimestamp" class="num">just now</span></span></div>
+    </div></div>
+  </div>
+  <div class="stats">
+    <div><p class="lbl" style="color:var(--mut-d);margin-bottom:1.2rem">Road Condition Breakdown</p>
+      <div class="bk">
+        <div class="r"><div class="t"><span>Critical Damage</span><span class="num" data-count="1247">1,247</span></div><div class="bar"><i style="width:37.9%;background:#EF4444"></i></div></div>
+        <div class="r"><div class="t"><span>Moderate Damage</span><span class="num" data-count="892">892</span></div><div class="bar"><i style="width:27.1%;background:#F97316"></i></div></div>
+        <div class="r"><div class="t"><span>Minor Issues</span><span class="num" data-count="563">563</span></div><div class="bar"><i style="width:17.1%;background:#EAB308"></i></div></div>
+        <div class="r"><div class="t"><span>Good Condition</span><span class="num" data-count="591">591</span></div><div class="bar"><i style="width:17.9%;background:#10B981"></i></div></div>
+      </div></div>
+    <div class="big3"><div><span class="num" data-count="3293">3,293</span><span class="lbl">Segments</span></div><div><span class="num" data-count="65" data-suffix="%">65%</span><span class="lbl">Need Repair</span></div><div><span class="num" data-count="12" data-prefix="↑" data-suffix="%">↑12%</span><span class="lbl">Improved</span></div></div>
+  </div>
+</div>
+</section>
+
+<section class="sec paper2" id="analytics" aria-labelledby="h-an">
+<div class="wrap"><div class="an-grid">
+  <div>
+    <p class="eyebrow lbl"><i class="idx">04</i><b></b>Analytics</p>
+    <h2 id="h-an" data-split-lines>Visualizing <em class="acc">Output</em></h2>
+    <p class="lead" style="margin-top:1.5rem" data-reveal>SadakSense generates structured datasets and analytical graphs proving the hypothesis: poor road quality significantly contributes to traffic delays.</p>
+    <div class="rows">
+      <div class="row" data-reveal data-hl="all"><span class="ic"><i data-lucide="bar-chart-3"></i></span><div><h4>Scatter Plots</h4><p>RQI vs Speed</p></div></div>
+      <div class="row" data-reveal data-hl="bad"><span class="ic"><i data-lucide="map"></i></span><div><h4>Heatmaps</h4><p>Congestion zones</p></div></div>
+      <div class="row" data-reveal data-hl="good"><span class="ic"><i data-lucide="download"></i></span><div><h4>Exportable Data</h4><p>CSV datasets for urban planning</p></div></div>
+    </div>
+  </div>
+  <div class="cardc" data-reveal><div class="cc-in">
+    <div class="cc-h"><div><h4>Quality ↔ Speed Correlation</h4><p class="mono">N = 120 Segments · Live Dataset</p></div><div class="lgd lbl"><span><i style="background:#10B981"></i>Good</span><span><i style="background:#EF4444"></i>Bad</span></div></div>
+    <div class="ch-a"><canvas id="analyticsChart" role="img" aria-label="Scatter chart of road quality index against estimated speed: higher RQI corresponds to higher speed"></canvas></div>
+    <p class="note">Higher RQI scores correspond to higher estimated speeds; roads below 3.5 sit at the slow end.</p>
+  </div></div>
+</div></div>
+</section>
+
+<section class="dark" id="concepts" style="position:relative;z-index:10;padding-top:var(--sec)" aria-labelledby="h-con">
+<div class="wrap">
+  <p class="eyebrow lbl"><i class="idx">05</i><b></b>Future Concepts</p>
+  <h2 id="h-con" data-split-lines>Where Tomorrow <em class="acc">Lives</em></h2>
+  <p class="lead" style="margin-top:1.5rem" data-reveal>Two experimental modules pushing the frontier of infrastructure intelligence — not yet deployed, but built and breathing.</p>
+  <div class="stk">
+    <article class="stack-card" style="--i:0" data-href="spatial.html"><div class="sc-in stack-card__inner"><div class="sc-body">
+      <div><div class="bdg lbl"><span>Experimental · Live Preview Available</span><span class="o">FEATURED</span></div>
+        <h3>Spatial <em class="acc">3D</em></h3><p class="sub lbl">3D Urban Environment Reconstruction</p>
+        <p>Any road photograph — satellite, drone, dashcam — is transformed into a <strong style="color:#fff">fully navigable, photorealistic 3D simulation</strong> in real-time. Walk through your data. Feel the damage.</p>
+        <div class="tags"><span><i data-lucide="box"></i>Image → 3D Mesh</span><span><i data-lucide="cpu"></i>Real-time Render</span><span><i data-lucide="footprints"></i>First-Person Navigation</span><span><i data-lucide="layers"></i>RQI Spatial Overlay</span></div>
+        <div class="caps"><div><b>Photo Upload</b><small>Any source, any angle</small></div><div><b>WebGL Renderer</b><small>60fps · Three.js engine</small></div><div><b>Walk-Through Mode</b><small>WASD + pointer lock</small></div><div><b>Defect Detection</b><small>Visual 3D annotations</small></div></div>
+        <div class="pull" id="pull"><span class="lbl">Revolutionary Potential</span><p>Turn any road photo into a live 3D world. No LiDAR. No special hardware. Just intelligence.</p></div>
+        <a class="btn btn-p" href="spatial.html" data-magnetic>Open Spatial 3D <i data-lucide="arrow-up-right"></i></a></div>
+      <div class="vis" data-cursor data-reveal data-clip aria-hidden="true"><img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" width="600" height="450" alt="" loading="lazy" decoding="async"><div class="col"><img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" width="600" height="450" alt="" loading="lazy" decoding="async"></div><div class="grid"></div></div>
+    </div></div></article>
+    <article class="stack-card" style="--i:1" data-href="city.html"><div class="sc-in stack-card__inner"><div class="sc-body">
+      <div><div class="bdg lbl"><span class="o">Alpha Stage</span><span>ALPHA V0.01</span></div>
+        <h3>City <em class="acc">Command</em></h3><p class="sub lbl">Urban Intelligence Dashboard</p>
+        <p>A <strong style="color:#fff">living city-scale command center</strong> — real-time traffic flows, infrastructure stress indicators, and predictive maintenance across every road segment, visualized in a single 3D orbital view.</p>
+        <div class="alpha"><i data-lucide="alert-triangle"></i><div><b>Alpha V0.01 — Concept Stage</b><small>Core systems functional. UI refinement in progress. Not production-ready.</small></div></div>
+        <div class="tags"><span><i data-lucide="activity"></i>City-Scale RQI</span><span><i data-lucide="car"></i>Live Traffic Feed</span><span><i data-lucide="box"></i>3D Orbital View</span><span><i data-lucide="zap"></i>Predictive Alerts</span></div>
+        <div class="st3"><div><span class="num">∞</span><span class="lbl">Road Segments</span></div><div><span class="num">3D</span><span class="lbl">Live Orbital</span></div><div><span class="num">AI</span><span class="lbl">Prediction</span></div></div>
+        <a class="btn btn-p" href="city.html" data-magnetic>Explore Alpha <i data-lucide="arrow-up-right"></i></a></div>
+      <div class="mini" data-reveal data-clip aria-hidden="true" data-loop><span class="lbl" style="color:var(--mut-d)">Sample visual</span><div class="flow"></div><div class="bars"><i style="height:50%"></i><i style="height:80%"></i><i style="height:35%"></i><i style="height:95%"></i><i style="height:60%"></i><i style="height:75%"></i><i style="height:45%"></i><i style="height:85%"></i></div><div class="flow"></div></div>
+    </div></div></article>
+  </div>
+  <p class="foot-note">These modules exist as <span>proof-of-concept prototypes</span> — glimpses of where SadakSense is headed. Not production systems. Pure vision.</p>
+</div>
+</section>
+
+<section class="cta on-orange" aria-label="Get started"><div class="cta-in" id="ctaBand" data-loop>
+  <div class="band" style="position:relative;left:0;width:100%;transform:none;-webkit-mask-image:none;mask-image:none" aria-hidden="true"><div class="marquee__track rev"><span>Analyze roads. Predict traffic.</span><span>Analyze roads. Predict traffic.</span><span>Analyze roads. Predict traffic.</span></div></div>
+  <div class="cta-btns"><a class="btn btn-k" href="main.html" data-magnetic>Launch App <i data-lucide="arrow-up-right"></i></a><a class="btn btn-s" href="heatmap.html" data-magnetic>Live Heatmaps</a></div>
+</div></section>
+
+<style id="gd-css">
+.gd-grid{display:grid;grid-template-columns:1fr;gap:3rem;align-items:center}
+@media(min-width:960px){.gd-grid{grid-template-columns:1fr 1.05fr;gap:4rem}}
+.gd-rec{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;padding:.45rem 1rem;border-radius:999px;background:var(--wash);border:1px solid #FED7AA;color:var(--deep)}
+.gd-rec i{width:9px;height:9px;border-radius:50%;background:var(--good);animation:gdPing 1.8s infinite}
+@keyframes gdPing{0%{box-shadow:0 0 0 0 rgb(16 185 129/.7)}100%{box-shadow:0 0 0 12px rgb(16 185 129/0)}}
+.gd-list{display:grid;gap:.75rem;margin:1.75rem 0 2rem;list-style:none;padding:0}
+.gd-list li{display:flex;gap:.8rem;align-items:flex-start;color:var(--mut-l);max-width:52ch}
+.gd-list li::before{content:"";flex:none;width:10px;height:10px;margin-top:.55rem;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px rgb(249 115 22/.18)}
+.gd-list b{color:var(--ink);font-weight:600}
+.gd-btns{display:flex;flex-wrap:wrap;gap:.75rem}
+.gd-card{position:relative;background:var(--ink);border-radius:32px;padding:10px;box-shadow:0 0 0 1px rgb(255 255 255/.08),0 40px 70px -28px rgb(9 9 11/.7),inset 0 1px 0 rgb(255 255 255/.06);transition:transform .6s var(--ease)}
+.gd-card:hover{transform:translateY(-6px)}
+.gd-in{position:relative;border-radius:24px;overflow:hidden;background:radial-gradient(ellipse 60% 60% at 50% 50%,rgb(249 115 22/.2),transparent 70%),linear-gradient(rgb(255 255 255/.04) 1px,transparent 1px) 0 0/40px 40px,linear-gradient(90deg,rgb(255 255 255/.04) 1px,transparent 1px) 0 0/40px 40px,var(--ink-2);padding:1.25rem 1rem .5rem}
+.gd-tag{position:absolute;left:1.1rem;top:1.1rem;z-index:2;display:inline-flex;align-items:center;gap:.5rem;padding:.3rem .8rem;border-radius:999px;border:1px solid rgb(255 255 255/.18);background:rgb(9 9 11/.6);color:#fff}
+.gd-tag i{width:7px;height:7px;border-radius:50%;background:var(--orange)}
+.gd-svg{display:block;width:100%;height:auto;overflow:visible}
+.gd-ln{stroke:rgb(255 255 255/.3);stroke-width:1.4;stroke-dasharray:4 8;animation:gdFlow 1.2s linear infinite}
+@keyframes gdFlow{to{stroke-dashoffset:-24}}
+.gd-n{cursor:pointer}
+.gd-n rect{fill:var(--ink-2);stroke:rgb(255 255 255/.24);stroke-width:1.4;transition:fill .3s,stroke .3s}
+.gd-n text{font:600 13px var(--f-body);fill:#fff;transition:fill .3s;pointer-events:none}
+.gd-n .gd-h{transform-box:fill-box;transform-origin:center;transition:transform .45s var(--ease)}
+.gd-n:hover .gd-h,.gd-n:focus-visible .gd-h{transform:scale(1.1)}
+.gd-n:hover rect,.gd-n:focus-visible rect{fill:var(--orange);stroke:var(--orange)}
+.gd-n:hover text,.gd-n:focus-visible text{fill:var(--ink)}
+.gd-n:focus-visible{outline:none}
+.gd-ping{transform-box:fill-box;transform-origin:center;animation:gdRing 2.8s ease-out infinite}
+@keyframes gdRing{from{transform:scale(1);opacity:.7}to{transform:scale(1.8);opacity:0}}
+.gd-spin{transform-box:fill-box;transform-origin:center;animation:gdSpin 28s linear infinite}
+@keyframes gdSpin{to{transform:rotate(360deg)}}
+.gd-c{font:800 14px var(--f-disp);fill:var(--ink);pointer-events:none}
+.gd-open{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:.25rem 0 .1rem;padding:.9rem 1.1rem;border-radius:16px;color:#fff;transition:background .3s,color .3s}
+.gd-open span.mono{color:var(--orange);font-size:.85rem;transition:color .3s}
+.gd-open:hover{background:var(--orange);color:var(--ink)}
+.gd-open:hover span.mono{color:var(--ink)}
+.gd-open svg{width:20px;height:20px}
+</style>
+<section class="sec paper2" id="guide" aria-labelledby="h-guide">
+<div class="wrap"><div class="gd-grid">
+  <div>
+    <p class="eyebrow lbl"><i class="idx">05</i><b></b>Guide</p>
+    <h2 id="h-guide" data-split-lines>Start with the <em class="acc">Guide</em></h2>
+    <p class="lead" style="margin-top:1.5rem" data-reveal>New here? <b>guide.html</b> is the one page that links to every other page in SadakSense. We recommend visiting it first.</p>
+    <p class="gd-rec lbl" data-reveal><i></i>Recommended first stop</p>
+    <ul class="gd-list" data-reveal>
+      <li><span><b>Every page, listed.</b> All 7 pages with a one-line description of each.</span></li>
+      <li><span><b>A four-stop demo route.</b> Follow it once and you have seen the whole idea.</span></li>
+      <li><span><b>Pick a goal.</b> Tell it what you want to do and it points you to the right page.</span></li>
+    </ul>
+    <div class="gd-btns" data-reveal>
+      <a class="btn btn-p" href="guide.html" data-magnetic>Open the Guide <i data-lucide="arrow-up-right"></i></a>
+      <a class="btn btn-s" href="main.html" data-magnetic>Launch App</a>
+    </div>
+  </div>
+  <div class="gd-card" data-reveal>
+    <div class="gd-in">
+      <span class="gd-tag lbl"><i></i>Sitemap preview</span>
+      <svg class="gd-svg" viewBox="0 0 520 400" role="group" aria-label="Map of every SadakSense page">
+<defs><radialGradient id="gdg" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#FDBA74"/><stop offset=".5" stop-color="#F97316"/><stop offset="1" stop-color="#C2410C"/></radialGradient><radialGradient id="gdglow"><stop offset="0" stop-color="#F97316" stop-opacity=".38"/><stop offset="1" stop-color="#F97316" stop-opacity="0"/></radialGradient></defs>
+<line class="gd-ln" x1="260" y1="200" x2="260.0" y2="60.0"/><line class="gd-ln" x1="260" y1="200" x2="412.5" y2="112.7"/><line class="gd-ln" x1="260" y1="200" x2="450.1" y2="231.2"/><line class="gd-ln" x1="260" y1="200" x2="344.6" y2="326.1"/><line class="gd-ln" x1="260" y1="200" x2="175.4" y2="326.1"/><line class="gd-ln" x1="260" y1="200" x2="69.9" y2="231.2"/><line class="gd-ln" x1="260" y1="200" x2="107.5" y2="112.7"/>
+<circle cx="260" cy="200" r="92" fill="url(#gdglow)"/>
+<circle class="gd-ping" cx="260" cy="200" r="44" fill="none" stroke="#F97316" stroke-width="2"/>
+<circle class="gd-spin" cx="260" cy="200" r="58" fill="none" stroke="#F97316" stroke-width="2" stroke-dasharray="1 10" stroke-linecap="round"/>
+<circle cx="260" cy="200" r="44" fill="url(#gdg)"/><circle cx="260" cy="200" r="44" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>
+<g transform="translate(260 191) scale(.85) translate(-280 -259)"><path d="M276 238 L284 238 L304 280 L256 280 Z" fill="#09090B" stroke="#09090B" stroke-width="5" stroke-linejoin="round"/><line x1="280" y1="243" x2="280" y2="248" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/><line x1="280" y1="254" x2="280" y2="261" stroke="#FDBA74" stroke-width="3.2" stroke-linecap="round"/><line x1="280" y1="269" x2="280" y2="279" stroke="#FDBA74" stroke-width="4.6" stroke-linecap="round"/></g>
+<text class="gd-c" x="260" y="231" text-anchor="middle">Guide</text>
+<a class="gd-n" href="landing.html" aria-label="Open Landing"><g transform="translate(260.0 60.0)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">Landing</text></g></g></a><a class="gd-n" href="main.html" aria-label="Open Analyzer"><g transform="translate(412.5 112.7)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">Analyzer</text></g></g></a><a class="gd-n" href="city.html" aria-label="Open City command"><g transform="translate(450.1 231.2)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">City command</text></g></g></a><a class="gd-n" href="heatmap.html" aria-label="Open Heatmap"><g transform="translate(344.6 326.1)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">Heatmap</text></g></g></a><a class="gd-n" href="game.html" aria-label="Open 3D visualizer"><g transform="translate(175.4 326.1)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">3D visualizer</text></g></g></a><a class="gd-n" href="spatial.html" aria-label="Open 3D rebuild"><g transform="translate(69.9 231.2)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">3D rebuild</text></g></g></a><a class="gd-n" href="mistri.html" aria-label="Open Mistri"><g transform="translate(107.5 112.7)"><g class="gd-h"><rect x="-59" y="-17" width="118" height="34" rx="17"/><text y="4.5" text-anchor="middle">Mistri</text></g></g></a>
+</svg>
+    </div>
+    <a class="gd-open" href="guide.html"><span class="mono">guide.html</span><span>Open the full guide <i data-lucide="arrow-up-right"></i></span></a>
+  </div>
+</div></div>
+</section>
+</main>
+
+<footer aria-label="Site footer"><div class="wrap">
+  <div class="ft"><div class="logo"><svg class="mk" aria-hidden="true" viewBox="0 0 32 32"><use href="#mk"/></svg><span>Sadak<em>Sense</em></span> <span class="mut" style="font-weight:400;font-size:.95rem">· Academic Research 2026</span></div>
+    <nav aria-label="Footer"><a class="tl" href="heatmap.html">Live Heatmaps</a><a class="tl" href="main.html">Launch App</a></nav>
+    <span class="lbl mut">Powered by Passion</span>
+    <div class="soc"><a href="#" aria-label="GitHub"><i data-lucide="github"></i></a><a href="#" aria-label="Documentation"><i data-lucide="file-text"></i></a></div></div>
+  <div class="wm" id="wm" aria-label="SadakSense">SADAKSENSE</div>
+  <button class="btn btn-s up-b" id="toTop" aria-label="Back to top"><i data-lucide="arrow-up"></i> Back to top</button>
+</div></footer>
+
+<div id="ss-chat-widget">
+  <button id="ss-chat-btn" aria-label="Open SadakSense Assistant" aria-expanded="false"><span id="ss-notif-dot"></span><svg class="mk" aria-hidden="true" viewBox="0 0 32 32"><use href="#mk"/></svg></button>
+  <div id="ss-chat-panel" role="dialog" aria-label="SadakSense AI Assistant">
+    <div id="ss-chat-header"><svg class="mk" aria-hidden="true" viewBox="0 0 32 32"><use href="#mk"/></svg><div><b>SadakSense Assistant</b><small>Online · Powered by Passion</small></div></div>
+    <div id="ss-context-bar"><span onclick="ssQuickSend('What is SadakSense?')">About</span><span onclick="ssQuickSend('How does RQI work?')">RQI Score</span><span onclick="ssQuickSend('What does the heatmap show?')">Heatmap</span><span onclick="ssQuickSend('How do I upload data?')">Upload Data</span><span onclick="ssQuickSend('help')">Help</span></div>
+    <div id="ss-messages" aria-live="polite"></div>
+    <div id="ss-input-area"><textarea id="ss-input" placeholder="Ask about SadakSense..." rows="1" aria-label="Message"></textarea><button id="ss-send-btn" aria-label="Send"><i data-lucide="send"></i></button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"></script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+<script>
+(function () {
+
+                // ── State ──
+                const state = { open: false, isTyping: false };
+
+                // ════════════════════════════════════════════
+                //   KNOWLEDGE BASE — All Q&A Rules
+                // ════════════════════════════════════════════
+                const KB = [
+
+                    // ── HELP ──
+                    {
+                        patterns: ['help', 'what can you do', 'what can you answer', 'commands', 'menu', 'options', 'topics'],
+                        response: `👋 Here's everything I can help you with:\n\n**About the Project**\n- What is SadakSense?\n- What is the goal / purpose?\n- Is this a real system or research?\n\n**Core Features**\n- How does RQI scoring work?\n- What is traffic correlation?\n- How does the AI / computer vision work?\n- What is the 3D simulation?\n- How does the heatmap work?\n\n**Data & Tech**\n- What data sources are used?\n- What is the tech stack?\n- How is RQI computed?\n- What datasets are used?\n\n**Pages & Navigation**\n- What pages does SadakSense have?\n- How do I use the main app?\n- How do I upload data?\n- What does the heatmap page show?\n- What is the game / simulation page?\n\nJust ask naturally — I'll understand! 🚀`,
+                        chips: ['What is SadakSense?', 'How does RQI work?', 'Tech stack']
+                    },
+
+                    // ── WHAT IS SADAKSENSE ──
+                    {
+                        patterns: ['what is sadaksense', 'what is this', 'what is this project', 'about sadaksense', 'about this project', 'explain sadaksense', 'tell me about sadaksense', 'what does sadaksense do', 'overview', 'introduction', 'intro'],
+                        response: `**SadakSense** is an AI-powered Infrastructure Intelligence System — an academic research project (2026) focused on analyzing road surface conditions using computer vision and geospatial analytics. 🛣️\n\nIt processes inputs like satellite imagery, drone footage, and dashcam video to detect road defects (cracks, potholes, surface wear), compute **Road Quality Indices (RQI)**, and correlate them with real-world traffic conditions.\n\nThe goal: demonstrate how smart city infrastructure can be monitored intelligently without heavy ML model training — using heuristic pipelines and visual analysis instead.`,
+                        chips: ['How does RQI work?', 'What pages are there?', 'Tech stack']
+                    },
+
+                    // ── PURPOSE / GOAL ──
+                    {
+                        patterns: ['goal', 'purpose', 'why was this built', 'why sadaksense', 'motivation', 'problem statement', 'what problem', 'research goal', 'objective'],
+                        response: `The core problem SadakSense tackles: **poor road quality directly causes traffic slowdowns**, yet most cities have no real-time system to monitor this link. 🎯\n\nThe research hypothesis is that Road Quality Index (RQI) scores strongly correlate with vehicle speeds — poor roads (RQI < 3.5) lead to 5–30 km/h traffic, while good roads (RQI > 6) allow 40–80 km/h.\n\nSadakSense proves this with data, visualizes it spatially on heatmaps, and simulates it in 3D — creating a full loop from **data → intelligence → visualization → experience**.`,
+                        chips: ['How is RQI computed?', 'What is traffic correlation?', 'See the heatmap']
+                    },
+
+                    // ── ACADEMIC / RESEARCH ──
+                    {
+                        patterns: ['academic', 'research', 'is this real', 'prototype', 'college', 'university', 'student project', 'paper', 'publication', 'study'],
+                        response: `SadakSense is an **academic research prototype** (2026), not a deployed production system. 📚\n\nIt's a conceptual prototype demonstrating how intelligent urban infrastructure monitoring could work — combining AI, geospatial analytics, and immersive simulation. The platform simulates real-world ML pipelines visually, but uses heuristic algorithms rather than requiring heavy model retraining.\n\nIt's built for **Delhi/India urban road assessment** as its primary geographic focus.`,
+                        chips: ['What data sources are used?', 'How does the AI work?', 'What is RQI?']
+                    },
+
+                    // ── RQI — WHAT IS IT ──
+                    {
+                        patterns: ['what is rqi', 'rqi meaning', 'road quality index', 'what does rqi mean', 'rqi score', 'explain rqi', 'rqi definition'],
+                        response: `**RQI (Road Quality Index)** is a numerical score from **0 to 10** that represents the condition of a road segment. Higher = better. 📊\n\n- **0–3.4** → Critical / Poor condition (severe cracks, potholes, surface failure)\n- **3.5–5.9** → Moderate condition (visible damage, requires attention)\n- **6–10** → Good condition (smooth, minimal defects)\n\nThe current dataset average is **6.8/10**, up +1.2 vs last month. RQI is derived from visual image analysis — detecting surface anomalies like cracks, deformations, and wear patterns.`,
+                        chips: ['How is RQI computed?', 'What is a good RQI?', 'Traffic correlation']
+                    },
+
+                    // ── RQI — HOW COMPUTED ──
+                    {
+                        patterns: ['how is rqi computed', 'how is rqi calculated', 'rqi computation', 'rqi calculation', 'how rqi works', 'rqi algorithm', 'rqi formula', 'how does rqi work'],
+                        response: `RQI is computed through a **multi-stage heuristic image analysis pipeline**: 🔬\n\n1. **Input** — Satellite image, drone frame, or dashcam snapshot of a road segment\n2. **Feature Extraction** — The system identifies surface anomalies: cracks, potholes, deformations, wear\n3. **Damage Scoring** — Each detected defect is weighted by type and severity\n4. **RQI Output** — A normalized score (0–10) is generated for that segment\n\nImportantly, this uses **heuristic algorithms** (pattern matching, thresholding) — no deep ML training required. The pipeline mimics neural network inference visually but runs on rule-based logic.`,
+                        chips: ['What is a good RQI?', 'Traffic correlation', 'What data sources are used?']
+                    },
+
+                    // ── GOOD RQI ──
+                    {
+                        patterns: ['what is a good rqi', 'good rqi', 'bad rqi', 'rqi threshold', 'rqi range', 'rqi levels', 'rqi categories'],
+                        response: `Here's the RQI breakdown: 🚦\n\n- **7–10** → Excellent — smooth road, high traffic speeds (60–80 km/h), no action needed\n- **5–6.9** → Good — minor issues, speeds around 40–60 km/h, monitor regularly\n- **3.5–4.9** → Moderate — visible damage, speeds drop to 20–40 km/h, schedule repairs\n- **0–3.4** → Critical — severe defects, speeds as low as 5–20 km/h, immediate repair needed\n\nThe dataset shows **65% of Delhi segments need repair** (score below 5), which directly contributes to chronic congestion.`,
+                        chips: ['How is RQI computed?', 'Traffic correlation', 'See the heatmap']
+                    },
+
+                    // ── TRAFFIC CORRELATION ──
+                    {
+                        patterns: ['traffic correlation', 'traffic speed', 'road quality traffic', 'how does rqi affect traffic', 'rqi and traffic', 'speed correlation', 'traffic simulation', 'velocity', 'congestion'],
+                        response: `This is the core hypothesis of SadakSense: **poor road quality = slower traffic**. 🚗📉\n\nThe correlation works like this:\n- **RQI < 3.5** → Estimated speeds: ~5–30 km/h (severe delay)\n- **RQI 3.5–6** → Estimated speeds: ~20–50 km/h (moderate flow)\n- **RQI > 6** → Estimated speeds: ~40–80 km/h (free flow)\n\nThe formula used: \`estSpeed = maxSpeed × (RQI / 10)\`\n\nThis is visualized as a **scatter plot** (RQI Score vs Speed) in the Analytics section — and simulated physically in the 3D game page where poor road lanes literally slow you down.`,
+                        chips: ['What is RQI?', 'What does the heatmap show?', 'What is the 3D simulation?']
+                    },
+
+                    // ── COMPUTER VISION / AI ──
+                    {
+                        patterns: ['computer vision', 'how does the ai work', 'ai pipeline', 'neural network', 'machine learning', 'ml', 'image analysis', 'how does it detect', 'defect detection', 'crack detection', 'pothole detection', 'how does ai work'],
+                        response: `SadakSense simulates an **AI-based visual data interpretation pipeline**: 🤖\n\n1. **Input** — Images/videos from satellite, drone, or dashcam sources are uploaded\n2. **Neural Inference Simulation** — The system mimics computer vision layers: feature extraction, pattern recognition, anomaly classification\n3. **Defect Detection** — Identifies cracks, potholes, surface wear, and deformations\n4. **Output** — Structured data: RQI score, damage severity, recommended action\n\nNote: The platform *simulates* ML inference visually (with animated loaders and progress bars). The actual computation uses **heuristic algorithms** — making it lightweight, requiring no GPU or model training.`,
+                        chips: ['How is RQI computed?', 'What data sources are used?', 'How do I upload data?']
+                    },
+
+                    // ── DATA SOURCES ──
+                    {
+                        patterns: ['data sources', 'what data', 'where does data come from', 'dataset', 'rdd2022', 'satellite', 'drone', 'dashcam', 'data input', 'supported formats', 'what formats', 'input formats'],
+                        response: `SadakSense supports three types of visual data inputs: 📡\n\n- **Satellite Imagery** — High-resolution road surface images from orbital sources (RDD2022 dataset)\n- **Drone Footage** — Aerial video/images captured by UAVs for localized inspection\n- **Dashcam Video** — Ground-level footage from vehicles traveling road segments\n\nThe primary training/reference dataset is **RDD2022 (Road Damage Detection 2022)** — a publicly available satellite road damage dataset.\n\nFor uploads in the main app: supported formats include common image files (JPG, PNG) and video formats for dashcam/drone feeds.`,
+                        chips: ['How do I upload data?', 'How does the AI process it?', 'What is RQI?']
+                    },
+
+                    // ── HOW TO USE THE APP / UPLOAD ──
+                    {
+                        patterns: ['how do i use', 'how to use', 'upload data', 'upload image', 'upload video', 'how to upload', 'main app', 'processing page', 'launch app', 'get started', 'start using'],
+                        response: `Using SadakSense is simple — here's the flow: 🚀\n\n**Step 1 — Upload**\nHead to the **Main App** (click "Launch App" above). Upload a satellite image, drone footage, or dashcam video of a road segment.\n\n**Step 2 — Processing**\nThe system runs its analysis pipeline: neural network initialization → feature extraction → pattern recognition → data classification. This is shown visually with animated progress indicators.\n\n**Step 3 — Results**\nYou get: detected road conditions, RQI score, analytical metrics, visual overlays, and actionable insights (e.g., "Report to authorities").\n\n👉 Click **"Launch App"** in the navbar or footer to get started!`,
+                        chips: ['What data formats are supported?', 'What is RQI?', 'See the heatmap']
+                    },
+
+                    // ── PAGES OVERVIEW ──
+                    {
+                        patterns: ['what pages', 'pages', 'how many pages', 'site structure', 'navigation', 'what sections', 'what are the pages', 'all pages', 'website structure'],
+                        response: `SadakSense has **5 interconnected pages**, each handling a different stage: 🗺️\n\n1. **Landing Page** (here) — Overview, features, analytics demo, heatmap preview\n2. **Main App** (main.html) — Core AI data processing tool — upload & analyze\n3. **System Init** (app.html) — Boot interface simulating AI network initialization\n4. **Live Heatmap** (heatmap.html) — Interactive geospatial road quality map for Delhi\n5. **3D Simulator** (game.html) — Drive through virtual road lanes based on RQI values\n\nThe flow: **Landing → Processing → Heatmap → 3D Sim → System UI** creates a complete pipeline experience.`,
+                        chips: ['How do I use the main app?', 'What does the heatmap show?', 'What is the 3D simulation?']
+                    },
+
+                    // ── HEATMAP PAGE ──
+                    {
+                        patterns: ['heatmap', 'what does the heatmap show', 'heatmap page', 'geospatial', 'map', 'hotspot', 'road map', 'heatmap.html', 'live heatmap', 'open heatmap', 'what do colors mean', 'colors on map'],
+                        response: `The **Live Heatmap** (heatmap.html) is SadakSense's geospatial intelligence module. 🗺️🔥\n\nIt displays road conditions across **Delhi NCR** on an interactive map using color-coded zones:\n- 🔴 **Red** → Critical damage (immediate repair needed)\n- 🟠 **Orange** → Moderate damage (schedule repair)\n- 🟡 **Yellow** → Minor issues (monitor)\n- 🟢 **Green** → Good condition\n\n**Features:**\n- Hotspot detection (AI-clustered damage zones)\n- Real-time feed updates every 5 minutes\n- Layer controls to filter by severity\n- Export reports in GeoJSON, CSV, or PDF\n\nCurrent stats: 3,293 road segments tracked, 65% need repair, 12% improvement this month.`,
+                        chips: ['Open Heatmap →', 'What is RQI?', 'Traffic correlation']
+                    },
+
+                    // ── 3D SIMULATION / GAME ──
+                    {
+                        patterns: ['3d simulation', 'game', 'game page', 'game.html', 'simulator', '3d', 'driving simulation', 'virtual', 'three.js', 'webgl', 'simulation', 'driving', 'lanes'],
+                        response: `The **3D Simulator** (game.html) is one of SadakSense's most immersive features! 🎮\n\nIt creates a **real-time 3D driving experience** where:\n- Each lane represents a different **RQI value**\n- Driving on poor-quality roads: low speed, screen shake, red tones, heavy vibration\n- Driving on moderate roads: balanced conditions, yellow tones\n- Driving on smooth roads: high speed, stable visuals, green tones\n\n**Tech behind it:**\n- Three.js (WebGL rendering)\n- Dynamic lighting and fog systems\n- Physics-inspired motion adjustments\n- Real-time visual feedback based on RQI\n\nIt turns abstract road quality data into a **felt experience** — you can literally feel the difference between a pothole-ridden road and a smooth highway.`,
+                        chips: ['What is RQI?', 'Traffic correlation', 'What is the heatmap?']
+                    },
+
+                    // ── SYSTEM INIT PAGE ──
+                    {
+                        patterns: ['app.html', 'system init', 'initialization', 'boot screen', 'loading screen', 'system boot', 'init page', 'startup'],
+                        response: `The **System Initialization UI** (app.html) is a high-tech boot interface that simulates connecting to an AI infrastructure monitoring network. ⚡\n\nIt features:\n- Animated progress bars showing system loading stages\n- Satellite communication indicators\n- Radar-like scanning components\n- Glassmorphism panels displaying system status\n\nConceptually, it creates the feel of *"Connecting to a global infrastructure intelligence network"* — reinforcing the futuristic, defense-grade aesthetic of SadakSense. It's the gateway before entering the main processing tool.`,
+                        chips: ['How do I use the main app?', 'What pages are there?', 'What is SadakSense?']
+                    },
+
+                    // ── TECH STACK ──
+                    {
+                        patterns: ['tech stack', 'technology', 'technologies', 'built with', 'how is it built', 'tools used', 'frameworks', 'libraries', 'frontend', 'html', 'tailwind', 'gsap', 'leaflet', 'chartjs', 'threejs', 'lucide', 'maplibre'],
+                        response: `SadakSense is built with **frontend web technologies**. 🛠️\n\n- **HTML5** — Structure and markup\n- **Tailwind CSS** — Utility-first styling\n- **Three.js** — 3D topographic background & game simulation (WebGL)\n- **GSAP + ScrollTrigger** — Smooth animations and scroll-triggered transitions\n- **Leaflet.js** — Interactive maps for the heatmap page\n- **MapLibre GL** — Advanced map rendering on heatmap.html\n- **Chart.js** — Analytical charts (scatter plots, line charts)\n- **Lucide Icons** — Icon system\n- **Bricolage Grotesque / Hanken Grotesk** — Typography\n\nNo Node.js, no database, no API keys needed. Fully static, runs in any browser.`,
+                        chips: ['How does the AI work?', 'What is the 3D simulation?', 'What is the heatmap?']
+                    },
+
+                    // ── DELHI / LOCATION ──
+                    {
+                        patterns: ['delhi', 'india', 'location', 'city', 'where', 'which city', 'geography', 'ncr', 'urban'],
+                        response: `SadakSense is focused on **Delhi, India** as its primary geographic test bed. 🏙️\n\nDelhi NCR (National Capital Region) was chosen due to its:\n- High urban road density with significant quality variation\n- Documented pothole and infrastructure issues\n- Availability of satellite/drone imagery\n- High traffic volumes making the RQI↔speed correlation clearly observable\n\nThe heatmap currently tracks **3,293 road segments** across Delhi, with coordinates centered around 28.6139°N, 77.2090°E (central Delhi).`,
+                        chips: ['See the heatmap', 'What is RQI?', 'What data sources are used?']
+                    },
+
+                    // ── SMART CITY ──
+                    {
+                        patterns: ['smart city', 'future', 'real world', 'deployment', 'production', 'scale', 'smart infrastructure', 'iot', 'urban planning'],
+                        response: `SadakSense demonstrates what a **real smart city infrastructure system** could look like. 🌆\n\nIn a production deployment, this kind of system would:\n- Continuously ingest satellite/drone feeds automatically\n- Update road condition maps in real-time\n- Trigger maintenance alerts for municipal authorities\n- Optimize traffic routing based on live RQI data\n- Integrate with IoT vehicle telemetry systems\n\nFor now, SadakSense is a **research prototype** proving the concept is viable. The data pipeline, visualization layers, and correlation models are all designed to mirror real-world GIS and smart city systems.`,
+                        chips: ['What is SadakSense?', 'Research context', 'See the heatmap']
+                    },
+
+                    // ── ANALYTICS ──
+                    {
+                        patterns: ['analytics', 'charts', 'scatter plot', 'graph', 'visualization', 'data visualization', 'statistics', 'stats'],
+                        response: `The **Analytics section** visualizes SadakSense's core hypothesis with real data. 📈\n\n**Scatter Plot (RQI Score vs Speed)**\n- X-axis: RQI Score (0–10)\n- Y-axis: Estimated vehicle speed (km/h)\n- Color coding: 🔴 Bad roads | ⚪ Average | 🟢 Good roads\n- Sample size: 120 road segments\n\n**Hero Chart (Line)**\nShows improvement trend over 10 months — from 18% good coverage to 82%, illustrating the monitoring system's impact.\n\nBoth charts use **Chart.js** and are fully interactive with hover tooltips.`,
+                        chips: ['Traffic correlation', 'What is RQI?', 'How does the heatmap work?']
+                    },
+
+                    // ── UI / DESIGN ──
+                    {
+                        patterns: ['design', 'ui', 'ux', 'interface', 'aesthetic', 'glassmorphism', 'animations', 'visual', 'look', 'style', 'dark mode', 'dark theme'],
+                        response: `SadakSense features a **futuristic, defense-grade UI aesthetic**: ✨\n\n- **Glassmorphism** — Frosted glass cards with backdrop blur\n- **HUD-style dashboards** — Mimicking satellite monitoring systems\n- **Scan line effects** — Animated scan beams over map/radar components\n- **Animated gradients** — Orange/dark brand palette with smooth color transitions\n- **Bento grid layout** — Apple-inspired card grid for features\n- **3D Topographic background** — Three.js wireframe mesh that animates on scroll\n- **GSAP scroll reveals** — Elements fade-up as you scroll down\n- **Live ping indicators** — Pulsing dots showing "live" data status\n\nThe overall vibe: *infrastructure intelligence meets sci-fi satellite monitoring*.`,
+                        chips: ['What is the tech stack?', 'What is SadakSense?', 'What pages are there?']
+                    },
+
+                    // ── GREETINGS ──
+                    {
+                        patterns: ['hello', 'hi', 'hey', 'hii', 'helo', 'sup', 'yo', 'good morning', 'good evening', 'good afternoon', 'howdy', 'whatsup', "what's up"],
+                        response: `Hey there! 👋 I'm the **SadakSense AI Assistant** — your guide to everything about this project!\n\nI can answer questions about RQI scoring, the heatmap, the 3D simulator, tech stack, data sources, and more. What would you like to know?`,
+                        chips: ['What is SadakSense?', 'How does RQI work?', 'Help']
+                    },
+
+                    // ── THANKS ──
+                    {
+                        patterns: ['thanks', 'thank you', 'thank u', 'thx', 'ty', 'appreciated', 'cool', 'awesome', 'great', 'nice', 'perfect', 'got it', 'understood'],
+                        response: `You're welcome! 😊 Happy to help. Feel free to ask anything else about SadakSense — there's a lot to explore!`,
+                        chips: ['What else can I ask?', 'Show me the heatmap', 'Launch the app']
+                    },
+
+                    // ── HOW LONG / PERFORMANCE ──
+                    {
+                        patterns: ['how long', 'analysis time', 'processing time', 'how fast', 'performance', 'speed of processing', 'time taken'],
+                        response: `The processing simulation is designed to feel realistic — typically **3–8 seconds** of animated processing visually. ⏱️\n\nIn the actual pipeline simulation on main.html, you'll see:\n1. Neural network initialization (~1s)\n2. Feature extraction (~2s)\n3. Pattern recognition (~2s)\n4. Classification & RQI generation (~1s)\n\nSince this is a frontend simulation (no actual server calls), the timing is controlled via JavaScript animations to mimic real inference latency.`,
+                        chips: ['How does the AI work?', 'How do I upload data?', 'What is RQI?']
+                    },
+
+                    // ── WHO MADE IT ──
+                    {
+                        patterns: ['who made', 'who built', 'creator', 'developer', 'team', 'author', 'made by', 'built by'],
+                        response: `SadakSense is an **academic research project (2026)**. 🎓\n\nFor specific team details, contact information, or paper references, I'd recommend checking the project documentation directly — I don't have those specifics on hand. But the project itself is focused on demonstrating AI-powered infrastructure intelligence for Indian urban roads.`,
+                        chips: ['What is SadakSense?', 'Research context', 'Tech stack']
+                    },
+
+                    // ── OPEN / NAVIGATE ──
+                    {
+                        patterns: ['open heatmap', 'go to heatmap', 'launch app', 'open app', 'go to app', 'open game', 'go to game', 'navigate', 'where is', 'how to go', 'link'],
+                        response: `Here's how to navigate SadakSense: 🔗\n\n- **Main App** → Click "Launch App" button (navbar or footer) → main.html\n- **Live Heatmaps** → Click "Live Heatmaps" button → heatmap.html\n- **3D Simulator** → Direct URL → game.html\n- **System Init** → Direct URL → app.html\n\nAll pages are in the same directory — just change the filename in the URL!`,
+                        chips: ['What is on the heatmap?', 'How do I use the main app?', 'What pages are there?']
+                    },
+
+                    // ── WHAT COLORS MEAN (HEATMAP) ──
+                    {
+                        patterns: ['what do colors mean', 'color meaning', 'color code', 'red mean', 'green mean', 'orange mean', 'yellow mean', 'color legend'],
+                        response: `The heatmap uses a **4-color severity system**: 🎨\n\n- 🔴 **Red** → Critical Damage — RQI 0–3.4, needs immediate repair (~1,247 segments)\n- 🟠 **Orange** → Moderate Damage — RQI 3.5–5, schedule repair (~892 segments)\n- 🟡 **Yellow** → Minor Issues — RQI 5–6.5, monitor regularly (~563 segments)\n- 🟢 **Green** → Good Condition — RQI 6.5–10, no action needed (~591 segments)\n\nTotal: 3,293 segments tracked. Currently **65% need some form of repair**.`,
+                        chips: ['Open the heatmap', 'What is RQI?', 'Traffic correlation']
+                    },
+
+                    // ── EXPORT / REPORTS ──
+                    {
+                        patterns: ['export', 'report', 'download', 'csv', 'pdf', 'geojson', 'data export'],
+                        response: `SadakSense supports **multiple export formats** for road condition data: 📥\n\n- **GeoJSON** — For GIS tools and spatial analysis software\n- **CSV** — Tabular data for urban planning, Excel, or database import\n- **PDF** — Formatted reports for stakeholders and authorities\n\nExport options are available from the **Heatmap page** (heatmap.html) — click the Export Reports button after loading your view.`,
+                        chips: ['Open the heatmap', 'What data sources are used?', 'What is SadakSense?']
+                    },
+
+                    // ── FALLBACK ──
+                    {
+                        patterns: ['__fallback__'],
+                        response: `Hmm, I'm not sure about that specific detail! 🤔\n\nI'm best at answering questions about:\n- **RQI scoring** and how it's computed\n- **Traffic correlation** with road quality\n- **Heatmap** features and color codes\n- **3D Simulator** and how it works\n- **Data sources** (satellite, drone, dashcam)\n- **Tech stack** and how it's built\n- **Navigation** between pages\n\nTry rephrasing, or type **help** to see all topics!`,
+                        chips: ['What is SadakSense?', 'How does RQI work?', 'Help']
+                    }
+                ];
+
+                // ════════════════════════════════════════════
+                //   RULE ENGINE — Match query to KB entry
+                // ════════════════════════════════════════════
+                function getResponse(input) {
+                    const q = input.toLowerCase().trim();
+
+                    // Try each rule (skip fallback)
+                    for (let i = 0; i < KB.length - 1; i++) {
+                        const rule = KB[i];
+                        for (const pattern of rule.patterns) {
+                            if (q.includes(pattern)) {
+                                return rule;
+                            }
+                        }
+                    }
+
+                    // Fuzzy: split into words and check for partial matches
+                    const words = q.split(/\s+/);
+                    const keywordMap = {
+                        'rqi': 3, 'road': 0, 'quality': 3, 'index': 3, 'score': 3,
+                        'heatmap': 12, 'map': 12, 'heat': 12,
+                        'game': 13, 'simulation': 13, '3d': 13, 'drive': 13,
+                        'traffic': 6, 'speed': 6, 'congestion': 6,
+                        'upload': 9, 'process': 9, 'data': 7,
+                        'ai': 8, 'vision': 8, 'detect': 8, 'neural': 8,
+                        'tech': 15, 'stack': 15, 'built': 15, 'html': 15,
+                        'delhi': 16, 'india': 16, 'city': 16,
+                        'help': 0, 'menu': 0, 'what': -1, 'how': -1
+                    };
+
+                    let bestIdx = -1;
+                    let bestScore = 0;
+                    words.forEach(w => {
+                        if (keywordMap[w] !== undefined && keywordMap[w] >= 0) {
+                            const idx = keywordMap[w];
+                            bestScore++;
+                            bestIdx = idx;
+                        }
+                    });
+
+                    if (bestIdx >= 0 && bestScore > 0) return KB[bestIdx];
+
+                    // Return fallback
+                    return KB[KB.length - 1];
+                }
+
+                // ── DOM Refs ──
+                const widget = document.getElementById('ss-chat-widget');
+                const btn = document.getElementById('ss-chat-btn');
+                const msgs = document.getElementById('ss-messages');
+                const input = document.getElementById('ss-input');
+                const sendBtn = document.getElementById('ss-send-btn');
+                const notifDot = document.getElementById('ss-notif-dot');
+
+                // ── Toggle ──
+                btn.addEventListener('click', () => {
+                    state.open = !state.open;
+                    widget.classList.toggle('open', state.open);
+                    if (state.open) {
+                        if (notifDot) notifDot.remove();
+                        setTimeout(() => input.focus(), 350);
+                    }
+                });
+
+                // ── Format message text ──
+                function formatMessage(text) {
+                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    text = text.replace(/`(.*?)`/g, '<code style="background:#f4f4f5;padding:1px 5px;border-radius:4px;font-size:0.78em;font-family:monospace;">$1</code>');
+                    text = text.replace(/\n/g, '<br>');
+                    text = text.replace(/^- (.+)/gm, '• $1');
+                    return text;
+                }
+
+                // ── Add message bubble ──
+                function addMessage(text, role) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'ss-msg ' + role;
+
+                    const label = document.createElement('div');
+                    label.className = 'ss-msg-label';
+                    label.textContent = role === 'bot' ? 'SadakSense AI' : 'You';
+
+                    const bubble = document.createElement('div');
+                    bubble.className = 'ss-msg-bubble';
+                    bubble.innerHTML = formatMessage(text);
+
+                    wrap.appendChild(label);
+                    wrap.appendChild(bubble);
+                    msgs.appendChild(wrap);
+                    scrollBottom();
+                    return wrap;
+                }
+
+                // ── Add quick-reply chips ──
+                function addChips(chipList) {
+                    if (!chipList || chipList.length === 0) return;
+                    const row = document.createElement('div');
+                    row.className = 'ss-chips';
+                    chipList.forEach(function (c) {
+                        const chip = document.createElement('button');
+                        chip.className = 'ss-chip';
+                        chip.textContent = c;
+                        chip.addEventListener('click', function () { ssQuickSend(c); });
+                        row.appendChild(chip);
+                    });
+                    const lastMsg = msgs.querySelector('.ss-msg.bot:last-child');
+                    if (lastMsg) lastMsg.appendChild(row);
+                    scrollBottom();
+                }
+
+                // ── Scroll to bottom ──
+                function scrollBottom() {
+                    setTimeout(function () { msgs.scrollTop = msgs.scrollHeight; }, 50);
+                }
+
+                // ── Typing indicator ──
+                function showTyping() {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'ss-msg bot';
+                    wrap.id = 'ss-typing-wrap';
+                    const ind = document.createElement('div');
+                    ind.className = 'ss-typing';
+                    ind.innerHTML = '<span></span><span></span><span></span>';
+                    wrap.appendChild(ind);
+                    msgs.appendChild(wrap);
+                    scrollBottom();
+                }
+
+                function hideTyping() {
+                    const t = document.getElementById('ss-typing-wrap');
+                    if (t) t.remove();
+                }
+
+                // ── Send message (fully local) ──
+                function sendMessage(text) {
+                    if (!text.trim() || state.isTyping) return;
+                    state.isTyping = true;
+                    sendBtn.disabled = true;
+
+                    addMessage(text, 'user');
+                    input.value = '';
+                    input.style.height = 'auto';
+                    showTyping();
+
+                    // Simulate a small thinking delay for natural feel
+                    setTimeout(function () {
+                        hideTyping();
+                        const result = getResponse(text);
+                        addMessage(result.response, 'bot');
+                        if (result.chips) addChips(result.chips);
+                        state.isTyping = false;
+                        sendBtn.disabled = false;
+                        input.focus();
+                    }, 500 + Math.random() * 400);
+                }
+
+                // ── Quick send (chips / context tags) ──
+                window.ssQuickSend = function (text) {
+                    if (!state.open) {
+                        state.open = true;
+                        widget.classList.add('open');
+                        if (notifDot) notifDot.remove();
+                    }
+                    sendMessage(text);
+                };
+
+                // ── Input handlers ──
+                sendBtn.addEventListener('click', function () { sendMessage(input.value); });
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage(input.value);
+                    }
+                });
+                input.addEventListener('input', function () {
+                    input.style.height = 'auto';
+                    input.style.height = Math.min(input.scrollHeight, 90) + 'px';
+                });
+
+                // ── Welcome message on first open ──
+                var welcomed = false;
+                btn.addEventListener('click', function () {
+                    if (state.open && !welcomed) {
+                        welcomed = true;
+                        setTimeout(function () {
+                            addMessage("👋 Hey! I'm the **SadakSense AI** — your guide to this project!\n\nI work completely offline — no API, no internet needed. Ask me anything about RQI, heatmaps, the 3D simulator, tech stack, and more.\n\nType **help** to see all topics, or tap a chip below!", 'bot');
+                            addChips(['What is SadakSense?', 'How does RQI work?', 'Help']);
+                        }, 400);
+                    }
+                });
+
+                // ── Close on outside click ──
+                document.addEventListener('click', function (e) {
+                    if (state.open && !widget.contains(e.target)) {
+                        state.open = false;
+                        widget.classList.remove('open');
+                    }
+                });
+
+            })();
+</script>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return(r||document).querySelector(s)},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduce=false,fine=matchMedia('(hover: hover) and (pointer: fine)').matches;
+var hasGSAP=typeof gsap!=='undefined'&&typeof ScrollTrigger!=='undefined';
+var root=document.documentElement,lenis=null,hidden=false;
+function icons(){try{if(window.lucide)lucide.createIcons()}catch(e){}}icons();addEventListener('load',icons);
+setTimeout(function(){if(!window.__motionReady)root.classList.add('reveal-failsafe')},4000);
+function fmt(v,d){return v.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function countTo(el,end,d,dur,done){var pre=el.dataset.prefix||'',suf=el.dataset.suffix||'';if(!hasGSAP||reduce){el.textContent=pre+fmt(end,d)+suf;return}var o={v:0};gsap.to(o,{v:end,duration:dur,ease:'power2.out',onUpdate:function(){el.textContent=pre+fmt(o.v,d)+suf}})}
+
+/* nav, scrolled class, anchors, menu */
+var nb=$('#navbar');function onScroll(){nb.classList.toggle('scrolled',scrollY>30)}addEventListener('scroll',onScroll,{passive:true});onScroll();
+function go(t){if(t==='#top'||t==='#'){if(lenis)lenis.scrollTo(0);else scrollTo({top:0,behavior:reduce?'auto':'smooth'});return}var el=$(t);if(!el)return;if(lenis)lenis.scrollTo(el,{offset:t==='#methodology'?0:-10});else el.scrollIntoView({behavior:reduce?'auto':'smooth'})}
+document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(!a)return;var h=a.getAttribute('href');if(h==='#'&&a.closest('.soc'))return;e.preventDefault();closeMenu();go(h)});
+$('#toTop').addEventListener('click',function(){go('#top')});
+var sheet=$('#sheet'),mb=$('#menuBtn');
+function openMenu(){sheet.classList.add('open');mb.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';$('a',sheet).focus()}
+function closeMenu(){if(!sheet.classList.contains('open'))return;sheet.classList.remove('open');mb.setAttribute('aria-expanded','false');document.body.style.overflow='';mb.focus()}
+mb.addEventListener('click',openMenu);$('#menuClose').addEventListener('click',closeMenu);
+$$('#sheet a.sl').forEach(function(a,i){a.style.transitionDelay=(i*60)+'ms'});
+document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'){closeMenu();var w=$('#ss-chat-widget');if(w.classList.contains('open')){$('#ss-chat-btn').click();$('#ss-chat-btn').focus()}}
+ if(e.key==='Tab'&&sheet.classList.contains('open')){var f=$$('a,button',sheet),a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
+$('#ss-chat-btn').addEventListener('click',function(){var o=$('#ss-chat-widget').classList.contains('open');this.setAttribute('aria-expanded',o)});
+$$('.stack-card').forEach(function(c){c.addEventListener('click',function(e){if(!e.target.closest('a'))location.href=c.dataset.href})});
+(function(){var tk=0,el=$('#heatTimestamp');setInterval(function(){tk++;if(el)el.textContent=tk<60?tk+'s ago':Math.floor(tk/60)+'m ago'},1000)})();
+
+/* ghost section numerals + cursor labels */
+[['#platform','01'],['#methodology .meth-stage','02'],['#heatmap','03'],['#analytics','04'],['#concepts','05']].forEach(function(p){var s=$(p[0]);if(!s)return;var g=document.createElement('span');g.className='ghost';g.setAttribute('aria-hidden','true');g.textContent=p[1];if(s.closest('.dark')||s.id==='heatmap'||s.id==='concepts')g.style.setProperty('--gc','rgb(255 255 255/.11)');if(p[1]==='02')g.style.setProperty('--gc','rgb(9 9 11/.22)');s.style.overflow='clip';s.insertBefore(g,s.firstChild)});
+/* loops pause off-screen / hidden tab */
+if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle('is-paused',!e.isIntersecting)})},{rootMargin:'120px'});$$('[data-loop]').forEach(function(el){io.observe(el)})}
+document.addEventListener('visibilitychange',function(){root.classList.toggle('tab-hidden',document.hidden);hidden=document.hidden;if(!hidden)topoStart()});
+
+/* marquee duplicates */
+$$('.marquee__track').forEach(function(t){var d=document.createElement('div');d.innerHTML=t.innerHTML;Array.prototype.slice.call(d.children).forEach(function(s){s.classList.add('marquee__dup');t.appendChild(s)})});
+
+/* Charts */
+var heroChart,scChart,scData=[];
+if(typeof Chart!=='undefined'){
+ try{Chart.defaults.font.family='"Geist Mono","JetBrains Mono",ui-monospace,monospace';
+ var pp=$('.pp');
+ heroChart=new Chart($('#heroChart').getContext('2d'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'],datasets:[{data:[18,27,22,38,42,48,55,63,71,82],borderColor:'#06B6D4',borderWidth:2.5,tension:.45,fill:false,pointRadius:function(c){return c.dataIndex===9?4:0},pointBackgroundColor:'#F97316',pointBorderColor:'#F97316',pointHoverRadius:5}]},
+ options:{responsive:true,maintainAspectRatio:false,animation:{duration:reduce?0:1400,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{backgroundColor:'#09090B',titleColor:'#fff',bodyColor:'#A1A1AA',padding:10,cornerRadius:14}},scales:{x:{display:false},y:{display:false}},interaction:{intersect:false,mode:'index'}},
+ plugins:[{id:'lastpt',afterDatasetsDraw:function(c){var p=c.getDatasetMeta(0).data[9];if(p&&pp)pp.style.transform='translate('+p.x+'px,'+p.y+'px)'}}]});
+ }catch(e){}
+}
+function initScatter(){
+ if(scChart||typeof Chart==='undefined')return;
+ try{
+ var sc=Array.from({length:100},function(){var rqi=Math.random()*10,spd=rqi*5.5+Math.random()*18-6;spd=Math.max(5,Math.min(spd,80));var color=rqi<3.5?'rgba(239,68,68,0.8)':rqi<6?'rgba(161,161,170,0.55)':'rgba(16,185,129,0.8)';return{x:rqi,y:spd,backgroundColor:color}});
+ scData=sc;
+ scChart=new Chart($('#analyticsChart').getContext('2d'),{type:'scatter',data:{datasets:[{data:sc,pointBackgroundColor:sc.map(function(d){return d.backgroundColor}),pointBorderColor:'transparent',pointRadius:4.5,pointHoverRadius:7}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:{duration:reduce?0:700,easing:'easeOutQuart',delay:function(c){return(c.type==='data'&&c.mode==='default')?c.dataIndex*14:0}},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#09090B',titleColor:'#fff',bodyColor:'#A1A1AA',padding:10,cornerRadius:14}},
+  scales:{x:{title:{display:true,text:'RQI Score (0–10)',color:'#52525B',font:{family:'"Geist Mono",monospace',size:11,weight:'600'}},grid:{color:'rgba(9,9,11,0.07)'},ticks:{color:'#52525B'},min:0,max:10},y:{title:{display:true,text:'Est. Speed (km/h)',color:'#52525B',font:{family:'"Geist Mono",monospace',size:11,weight:'600'}},grid:{color:'rgba(9,9,11,0.07)'},ticks:{color:'#52525B'}}}}});
+ }catch(e){}
+}
+function hlChart(k){if(!scChart)return;var base=scData.map(function(d){return d.backgroundColor});var ds=scChart.data.datasets[0];
+ ds.pointBackgroundColor=base.map(function(c,i){var x=scData[i].x;var on=k==='all'||(k==='bad'&&x<3.5)||(k==='good'&&x>=6);return(!k||on)?c:'rgba(161,161,170,0.15)'});scChart.update('none')}
+$$('.row[data-hl]').forEach(function(r){r.addEventListener('pointerenter',function(){hlChart(r.dataset.hl)});r.addEventListener('pointerleave',function(){hlChart(null)})});
+if(typeof ScrollTrigger==='undefined'||!hasGSAP){initScatter()}
+
+/* Leaflet */
+var map=null;
+(function(){if(typeof L==='undefined')return;try{
+ map=L.map('hmap',{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false,keyboard:false});map.setView([28.6139,77.2090],12);
+ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+ var sev={'#ef4444':'critical','#f97316':'moderate','#eab308':'minor','#22c55e':'good'};
+ var spots=[{lat:28.625,lng:77.210,r:650,color:'#ef4444'},{lat:28.600,lng:77.230,r:520,color:'#f97316'},{lat:28.645,lng:77.190,r:480,color:'#ef4444'},{lat:28.575,lng:77.170,r:720,color:'#eab308'},{lat:28.630,lng:77.250,r:420,color:'#22c55e'},{lat:28.655,lng:77.230,r:360,color:'#22c55e'},{lat:28.590,lng:77.260,r:530,color:'#ef4444'},{lat:28.610,lng:77.150,r:600,color:'#f97316'},{lat:28.670,lng:77.200,r:410,color:'#eab308'},{lat:28.550,lng:77.200,r:570,color:'#ef4444'},{lat:28.618,lng:77.275,r:380,color:'#f97316'},{lat:28.535,lng:77.245,r:490,color:'#eab308'}];
+ spots.forEach(function(s,i){L.circle([s.lat,s.lng],{radius:s.r,color:s.color,weight:1.5,opacity:.75,fillColor:s.color,fillOpacity:.25,interactive:false}).addTo(map);
+  var icon=L.divIcon({className:'',iconSize:[16,16],iconAnchor:[8,8],html:'<span class="ripple ripple--'+sev[s.color]+'" style="animation-delay:'+(i*.2)+'s"></span>'});L.marker([s.lat,s.lng],{icon:icon,interactive:false,keyboard:false}).addTo(map)});
+ $$('.ripple').forEach(function(r,i){r.style.setProperty('--d',i*.2+'s')});
+ addEventListener('resize',function(){map.invalidateSize()});
+ }catch(e){map=null}})();
+$$('.lg button').forEach(function(b){var w=$('#hmapWrap');b.addEventListener('pointerenter',function(){w.dataset.dim=b.dataset.sev});b.addEventListener('pointerleave',function(){w.removeAttribute('data-dim')});b.addEventListener('focus',function(){w.dataset.dim=b.dataset.sev});b.addEventListener('blur',function(){w.removeAttribute('data-dim')})});
+
+/* Three.js topo: grid lines displaced on the GPU */
+var rdr,scene,cam,mesh,uni,clk,raf=0,topoOn=true,spin=0,boost=0,pm={x:0,z:0,cx:0,cz:0,a:0,on:false};
+(function(){var host=$('#topo-bg');if(typeof THREE==='undefined')return;try{
+ scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,1000);cam.position.set(0,40,60);cam.lookAt(0,0,0);
+ rdr=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});rdr.setSize(innerWidth,innerHeight);rdr.setPixelRatio(Math.min(devicePixelRatio,1.5));host.appendChild(rdr.domElement);
+ var N=72,S=220,h=S/2,st=S/N,v=[];
+ for(var i=0;i<=N;i++)for(var j=0;j<N;j++){var a=-h+i*st,b=-h+j*st;v.push(a,0,b,a,0,b+st,b,0,a,b+st,0,a)}
+ var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+ uni={uT:{value:0},uM:{value:new THREE.Vector2(0,0)},uA:{value:0}};
+ var VS='uniform float uT;uniform vec2 uM;uniform float uA;varying float vA;void main(){vec3 p=position;float h=sin(p.x*.05+uT*.3)*cos(p.z*.05+uT*.12)*4.+sin(p.x*.021-uT*.15)*cos(p.z*.027+uT*.1)*3.;float d=distance(p.xz,uM);h+=exp(-d*d/520.)*uA*6.*cos(d*.3-uT*2.4);p.y=h;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);vA=(1.-smoothstep(40.,112.,length(p.xz)))*(.5+.5*smoothstep(-7.,7.,h));}';
+ var FS='varying float vA;void main(){gl_FragColor=vec4(.918,.345,.047,vA*.34);}';
+ mesh=new THREE.LineSegments(geo,new THREE.ShaderMaterial({uniforms:uni,transparent:true,depthWrite:false,vertexShader:VS,fragmentShader:FS}));mesh.frustumCulled=false;scene.add(mesh);clk=new THREE.Clock();
+ var rc=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0),hit=new THREE.Vector3(),ndc=new THREE.Vector2();
+ if(fine)addEventListener('pointermove',function(e){if(!topoOn)return;ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);rc.setFromCamera(ndc,cam);if(rc.ray.intersectPlane(pl,hit)){var a=-mesh.rotation.y,c=Math.cos(a),s=Math.sin(a);pm.x=hit.x*c+hit.z*s;pm.z=-hit.x*s+hit.z*c;pm.on=true}},{passive:true});
+ document.addEventListener('pointerleave',function(){pm.on=false});
+ addEventListener('resize',function(){cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();rdr.setSize(innerWidth,innerHeight)});
+ addEventListener('pagehide',function(){cancelAnimationFrame(raf);rdr.dispose();geo.dispose()});
+ frame(0);if(!reduce)topoStart();
+ var hh=$('.hero');if('IntersectionObserver' in window)new IntersectionObserver(function(e){topoOn=e[0].isIntersecting;if(topoOn)topoStart()},{rootMargin:'200px'}).observe(hh);
+ }catch(e){rdr=null}})();
+function frame(t){if(!rdr)return;pm.cx+=(pm.x-pm.cx)*.1;pm.cz+=(pm.z-pm.cz)*.1;pm.a+=((pm.on?1:0)-pm.a)*.05;uni.uT.value=t;uni.uM.value.set(pm.cx,pm.cz);uni.uA.value=pm.a;mesh.rotation.y=t*.012+spin;rdr.render(scene,cam)}
+function topoStart(){if(!rdr||reduce||raf)return;(function tick(){if(hidden||!topoOn){raf=0;return}raf=requestAnimationFrame(tick);boost*=.92;spin+=boost*.001;frame(clk.getElapsedTime())})()}
+
+/* ---------- motion ---------- */
+if(!hasGSAP){window.__motionReady=false;root.classList.add('reveal-failsafe');$$('.num[data-count]').forEach(function(n){});return}
+gsap.registerPlugin(ScrollTrigger);ScrollTrigger.config({ignoreMobileResize:true});var hasSplit=typeof SplitText!=='undefined';if(hasSplit)gsap.registerPlugin(SplitText);
+if(typeof Lenis!=='undefined'&&!reduce){lenis=new Lenis({lerp:.085,wheelMultiplier:.9,smoothWheel:true,syncTouch:false});lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(function(t){lenis.raf(t*1000)});gsap.ticker.lagSmoothing(0)}
+root.classList.add('is-gsap');
+var nativeProg=window.CSS&&CSS.supports&&CSS.supports('animation-timeline: scroll()');
+
+/* marquee (B3) */
+if(!reduce){var tr=$$('.marquee__track'),pos=tr.map(function(){return-25}),setX=tr.map(function(el){return gsap.quickSetter(el,'xPercent')}),bst=0,dir=1;
+ ScrollTrigger.create({onUpdate:function(s){dir=s.direction;bst=Math.min(Math.abs(s.getVelocity())/400,5);boost=Math.min(Math.abs(s.getVelocity())/300,6)}});
+ 
+ gsap.ticker.add(function(t,dt){bst*=.94;var st=(.035+bst*.05)*dir*(dt/16.7);tr.forEach(function(el,i){if(el.closest('.is-paused')||el.parentNode.matches(':hover'))return;var rv=el.classList.contains('rev')?-1:1;pos[i]=gsap.utils.wrap(-50,0,pos[i]-st*rv);setX[i](pos[i])})})}
+else{$$('.marquee__track').forEach(function(t){t.style.transform='none'})}
+
+/* caption typing (C7) */
+(function(){var f=$('#capFile'),g=$('#capTag');if(reduce||!f)return;var A='img_pothole_04.jpg',B='HEAVY_DAMAGE',i=0,ph=0;var vis=true;if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[0].isIntersecting}).observe(f);
+ setInterval(function(){if(!vis||hidden)return;if(ph===0){i++;f.textContent=A.slice(0,i);g.textContent='';if(i>=A.length){ph=1;i=0}}else if(ph===1){i++;g.textContent=B.slice(0,i);if(i>=B.length){ph=2;i=0}}else{i++;if(i>22){ph=0;i=0}}},95)})();
+
+/* counters + bars reset */
+var counters=$$('[data-count]');
+if(!reduce){counters.forEach(function(el){el.textContent=(el.dataset.prefix||'')+'0'+(el.dataset.suffix||'');ScrollTrigger.create({trigger:el,start:'top 90%',once:true,onEnter:function(){countTo(el,parseFloat(el.dataset.count),+(el.dataset.decimals||0),1.6)}})});
+ $$('.bar i').forEach(function(b,i){gsap.fromTo(b,{scaleX:0},{scaleX:1,duration:1.2,delay:i*.1,ease:'expo.out',scrollTrigger:{trigger:'.bk',start:'top 85%',once:true}})})}
+
+/* gauge / methodology panel animations (once each) */
+var done={};
+function a1(inst){if(done.a1)return;done.a1=1;var pills=$$('.pill'),rows=$$('.frow'),heavy=$('#pillHeavy');if(inst||reduce)return;heavy.classList.remove('on');gsap.set(rows,{autoAlpha:0,y:10});gsap.timeline().to(rows[0],{autoAlpha:1,y:0,duration:.5,ease:'expo.out'},.2).to(rows[1],{autoAlpha:1,y:0,duration:.5,ease:'expo.out'},.5).add(function(){heavy.classList.add('on')},.9)}
+function a2(inst){if(done.a2)return;done.a2=1;if(inst||reduce)return;var n=$('#needle'),g=$('#gaugeNum'),o={a:-90},v={n:0};n.setAttribute('transform','rotate(-90 100 100)');g.textContent='0.0';gsap.to(o,{a:-32.4,duration:1.8,ease:'back.out(1.5)',onUpdate:function(){n.setAttribute('transform','rotate('+o.a.toFixed(2)+' 100 100)')}});gsap.to(v,{n:3.2,duration:1.6,ease:'power3.out',onUpdate:function(){g.textContent=v.n.toFixed(1)}})}
+function a3(inst){if(done.a3)return;done.a3=1;if(inst||reduce)return;var code=$('#code'),ls=$$('div',code);ls.forEach(function(l){l.dataset.h=l.innerHTML;l.style.visibility='hidden'});var car=$('.car'),rd=$('.rd'),w=rd.clientWidth-34;
+ var o={p:0};gsap.to(o,{p:1,duration:1.6,ease:'none',onUpdate:function(){var tot=o.p*3;ls.forEach(function(l,i){l.style.visibility=tot>i?'visible':'hidden'})}});
+ gsap.timeline({delay:.3}).fromTo(car,{x:0},{x:w*.6,duration:.6,ease:'power2.in'}).to(car,{x:w*.74,duration:2.2,ease:'power3.out'}).to('.dl',{opacity:1,duration:.4},'-=.4')}
+if(reduce){a1(1);a2(1);a3(1);$('.dl').style.opacity=1;$('.car').style.transform='translateX(60%)'}
+
+/* matchMedia */
+var mm=gsap.matchMedia();
+mm.add({motion:'all',desktop:'(min-width: 1024px)',fine:'(hover: hover) and (pointer: fine)'},function(ctx){
+ var c=ctx.conditions;
+ if(!c.motion){gsap.set('[data-reveal]',{clearProps:'all',opacity:1});window.__motionReady=true;return}
+ var cleanups=[];
+ /* intro */
+ var ul=$('.hero-underline path');
+ var intro=gsap.timeline({defaults:{ease:'expo.out'},delay:.95});
+ intro.from('#navbar',{y:-24,autoAlpha:0,duration:.7},0)
+  .from('.hero-eyebrow',{y:14,autoAlpha:0,duration:.6},.1)
+  .from('.hero-title .line__in',{yPercent:115,duration:1.1,stagger:.12},.2);
+ if(ul){var len=ul.getTotalLength();gsap.set(ul,{strokeDasharray:len,strokeDashoffset:len});intro.to(ul,{strokeDashoffset:0,duration:.9,ease:'power2.inOut'},'-=.5')}
+ intro.from('.hero-lead',{y:18,autoAlpha:0,duration:.8},'-=.8')
+  .from('.hero-cta > *',{y:14,autoAlpha:0,scale:.96,stagger:.08,duration:.6,ease:'back.out(1.6)'},'-=.6')
+  .from('.hero-card',{y:60,rotateX:10,autoAlpha:0,transformPerspective:900,duration:1.2},.35)
+  .from('.hero-card2',{y:40,autoAlpha:0,duration:1},.6)
+  .add(function(){countTo($('.hero-rqi-n'),6.8,1,1.4)},1);
+ window.__motionReady=true;
+ /* generic reveals B4 */
+ gsap.set('[data-reveal]',{y:28});ScrollTrigger.batch('[data-reveal]',{start:'top 88%',once:true,onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:1,stagger:.09,ease:'expo.out',overwrite:true,onComplete:function(){b.forEach(function(el){el.classList.add('rv');if(!el.hasAttribute('data-tilt'))gsap.set(el,{clearProps:'opacity,transform'})})}});
+  b.forEach(function(el){if(el.hasAttribute('data-clip'))gsap.fromTo(el,{clipPath:'inset(0 0 100% 0 round 22px)'},{clipPath:'inset(0 0 0% 0 round 32px)',duration:1.1,ease:'expo.out',onComplete:function(){el.style.clipPath='none'}});if(el.classList.contains('row'))el.classList.add('in')})}});
+ /* section titles */
+ if(hasSplit){document.fonts.ready.then(function(){$$('[data-split-lines]').forEach(function(el){SplitText.create(el,{type:'lines',mask:'lines',autoSplit:true,onSplit:function(s){return gsap.from(s.lines,{yPercent:110,duration:1,ease:'expo.out',stagger:.08,scrollTrigger:{trigger:el,start:'top 85%',once:true}})}})})})}
+ /* B1 hero parallax */
+ gsap.to('.hero-copy',{yPercent:-8,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+ gsap.to('.hero-stack',{scale:.96,opacity:.6,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+ /* B5 image parallax */
+ $$('.tile .shot,.vid img').forEach(function(im){gsap.fromTo(im,{scale:1.15,yPercent:-3},{scale:1,yPercent:3,ease:'none',scrollTrigger:{trigger:im.closest('.tile'),start:'top bottom',end:'bottom top',scrub:true}})});
+ /* ghost numeral parallax */
+ $$('.ghost').forEach(function(g){if(g.textContent==='02')return;gsap.fromTo(g,{yPercent:-10},{yPercent:28,ease:'none',scrollTrigger:{trigger:g.parentNode,start:'top bottom',end:'bottom top',scrub:true}})});
+ /* velocity skew on headings */
+ $$('body h2,.hero-title').forEach(function(h){h.classList.add('skw')});
+ var skew=gsap.quickTo('.skw','skewY',{duration:.7,ease:'power3'});
+ ScrollTrigger.create({onUpdate:function(s){skew(gsap.utils.clamp(-3.5,3.5,s.getVelocity()/-600))}});
+ ScrollTrigger.addEventListener('scrollEnd',function(){skew(0)});
+ /* B8 map frame */
+ gsap.fromTo('#mapframe',{scale:.92},{scale:1,ease:'none',scrollTrigger:{trigger:'#mapframe',start:'top 95%',end:'top 40%',scrub:true}});
+ /* B11 stack */
+ var cards=$$('.stack-card');if(window.innerWidth>=768)cards.forEach(function(cd,i){if(i===cards.length-1)return;gsap.to($('.stack-card__inner',cd),{scale:.94,opacity:.6,ease:'none',scrollTrigger:{trigger:cards[i+1],start:'top 80%',end:'top 15%',scrub:true}})});
+ /* B12 quote words */
+ if(hasSplit){document.fonts.ready.then(function(){var p=$('#pull p');SplitText.create(p,{type:'words',autoSplit:true,onSplit:function(s){return gsap.to(s.words,{color:'#FFFFFF',stagger:.1,ease:'none',scrollTrigger:{trigger:'#pull',start:'top 80%',end:'bottom 45%',scrub:true}})}})})}
+ /* B13 CTA */
+ gsap.fromTo('#ctaBand',{scale:.9},{scale:1,ease:'none',scrollTrigger:{trigger:'#ctaBand',start:'top 95%',end:'top 35%',scrub:true}});
+ /* B14 footer chars */
+ var wm=$('#wm');if(wm){gsap.from($$('span',wm),{yPercent:100,stagger:.06,duration:1,ease:'expo.out',scrollTrigger:{trigger:wm,start:'top 95%',once:true}})}
+ /* B10 analytics */
+ ScrollTrigger.create({trigger:'#analyticsChart',start:'top 80%',once:true,onEnter:initScatter});
+ /* heatmap */
+ ScrollTrigger.create({trigger:'#hmap',start:'top 90%',once:true,onEnter:function(){setTimeout(function(){if(map)map.invalidateSize()},50)}});
+ /* pinned methodology B6 */
+ if(c.desktop){
+  root.classList.add('pin-on');
+  var panels=$$('#methodology .meth-panel'),steps=$$('#methodology .meth-step');
+  gsap.set(panels,{autoAlpha:0,y:40,scale:.96});gsap.set(panels[0],{autoAlpha:1,y:0,scale:1});gsap.set(steps.slice(1),{opacity:.35});gsap.set('.meth-progress',{scaleY:0});
+  var tl=gsap.timeline({defaults:{ease:'none'},scrollTrigger:{trigger:'#methodology .meth-stage',start:'top top',end:'+=300%',pin:true,scrub:lenis?true:.6,anticipatePin:1,invalidateOnRefresh:true,onUpdate:function(s){if(s.progress>.02)a1();if(s.progress>.38)a2();if(s.progress>.7)a3()}}});
+  panels.forEach(function(p,i){if(!i)return;tl.to(panels[i-1],{autoAlpha:0,y:-40,scale:.96,duration:.4},i).to(steps[i-1],{opacity:.35,duration:.3},i).to(p,{autoAlpha:1,y:0,scale:1,duration:.4},i+.2).to(steps[i],{opacity:1,duration:.3},i+.2)});
+  tl.to('.meth-progress',{scaleY:1,duration:2.4},0).to({},{duration:.4},2.6);
+  a1();
+  cleanups.push(function(){root.classList.remove('pin-on')});
+ }else{
+  ['.meth-panel:nth-child(1)','.meth-panel:nth-child(2)','.meth-panel:nth-child(3)'].forEach(function(s,i){ScrollTrigger.create({trigger:s,start:'top 75%',once:true,onEnter:[a1,a2,a3][i]})});
+  gsap.set('.meth-progress',{scaleY:1});
+ }
+ /* D1 magnetic, D2 tilt, D8 cursor */
+ if(c.fine){
+  $$('[data-magnetic]').forEach(function(el){var xT=gsap.quickTo(el,'x',{duration:.5,ease:'power3.out'}),yT=gsap.quickTo(el,'y',{duration:.5,ease:'power3.out'});el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();xT((e.clientX-(r.left+r.width/2))*.25);yT((e.clientY-(r.top+r.height/2))*.25)});el.addEventListener('pointerleave',function(){xT(0);yT(0)})});
+  $$('[data-tilt]').forEach(function(el){var mx=+(el.dataset.tilt||6),rx=gsap.quickTo(el,'rotationX',{duration:.5,ease:'power3.out'}),ry=gsap.quickTo(el,'rotationY',{duration:.5,ease:'power3.out'});gsap.set(el,{transformPerspective:900});el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect(),nx=(e.clientX-r.left)/r.width-.5,ny=(e.clientY-r.top)/r.height-.5;ry(nx*mx*2);rx(-ny*mx*2);el.style.setProperty('--mx',(nx+.5)*100+'%');el.style.setProperty('--my',(ny+.5)*100+'%')});el.addEventListener('pointerleave',function(){rx(0);ry(0)})});
+  var vis=$('.vis');if(vis)vis.addEventListener('pointermove',function(e){var r=vis.getBoundingClientRect();vis.style.setProperty('--mx',(e.clientX-r.left)+'px');vis.style.setProperty('--my',(e.clientY-r.top)+'px')});
+  root.classList.add('has-cursor');var dot=$('.cursor-dot'),ring=$('.cursor-ring');gsap.set([dot,ring],{xPercent:-50,yPercent:-50});
+  var dx=gsap.quickTo(dot,'x',{duration:.08}),dy=gsap.quickTo(dot,'y',{duration:.08}),rx2=gsap.quickTo(ring,'x',{duration:.35,ease:'power3'}),ry2=gsap.quickTo(ring,'y',{duration:.35,ease:'power3'});
+  addEventListener('pointermove',function(e){dx(e.clientX);dy(e.clientY);rx2(e.clientX);ry2(e.clientY)});
+  document.addEventListener('pointerover',function(e){ring.classList.toggle('is-active',!!e.target.closest('a,button,[data-cursor]'))});
+  var rd=$('.road');if(rd){var rx3=gsap.quickTo(rd,'x',{duration:1.4,ease:'power3'}),ry3=gsap.quickTo(rd,'y',{duration:1.4,ease:'power3'});addEventListener('pointermove',function(e){rx3((e.clientX/innerWidth-.5)*-34);ry3((e.clientY/innerHeight-.5)*-20)},{passive:true})}
+  cleanups.push(function(){root.classList.remove('has-cursor')});
+ }
+ return function(){cleanups.forEach(function(f){f()})};
+});
+
+/* B7 nav indicator, B15 rail, B16 progress bar (not matchMedia-gated; tiny) */
+(function(){
+ var links=$$('.nlinks a'),ind=$('.nind'),secs=['#platform','#methodology','#heatmap','#guide'];
+ function setInd(i){if(i<0||!links[i]){gsap.to(ind,{opacity:0,duration:.2});return}var l=links[i];gsap.to(ind,{x:l.offsetLeft,scaleX:l.offsetWidth/100,opacity:1,duration:reduce?0:.45,ease:'power3.out'})}
+ secs.forEach(function(s,i){ScrollTrigger.create({trigger:s,start:'top 50%',end:'bottom 50%',onToggle:function(self){if(self.isActive)setInd(i)}})});
+ ['.hero','#concepts'].forEach(function(s){ScrollTrigger.create({trigger:s,start:'top 50%',end:'bottom 50%',onToggle:function(x){if(x.isActive)setInd(-1)}})});
+ var marker=$('.rqi-rail__marker'),val=$('.rqi-rail__value'),track=$('.rqi-rail__track'),rail=$('.rail'),prog=$('.scroll-progress'),ramp=['#EF4444','#F97316','#EAB308','#10B981'],th=0,setY=gsap.quickSetter(marker,'y','px');
+ function measure(){th=track.clientHeight-marker.offsetHeight;var ids=['platform','methodology','heatmap','analytics','concepts'],H=document.documentElement.scrollHeight-innerHeight;$$('.tk',rail).forEach(function(t){t.remove()});ids.forEach(function(id,i){var s=document.getElementById(id);if(!s||H<=0)return;var p=Math.min(1,s.offsetTop/H),b=document.createElement('button');b.className='tk';b.tabIndex=-1;b.textContent='0'+(i+1);b.style.top=(p*100)+'%';b.style.pointerEvents='auto';b.addEventListener('click',function(){go('#'+id)});rail.appendChild(b)})}
+ measure();ScrollTrigger.addEventListener('refresh',measure);
+ var lastV='';ScrollTrigger.create({trigger:document.body,start:'top top',end:'bottom bottom',onUpdate:function(s){var p=s.progress;setY(p*th);var tv=(2+p*7.5).toFixed(1);if(tv!==lastV){lastV=tv;val.textContent=tv;marker.style.setProperty('--c',gsap.utils.interpolate(ramp,p))}if(!nativeProg&&prog)prog.style.transform='scaleX('+p+')'}});
+})();
+/* footer wordmark: fixed-width letters + smooth weight wave */
+(function(){var wm=$('#wm');if(!wm)return;var txt=wm.textContent.trim();wm.setAttribute('aria-label',txt);wm.innerHTML='';var L=[];
+ txt.split('').forEach(function(ch){var s=document.createElement('span');s.setAttribute('aria-hidden','true');s.textContent=ch;wm.appendChild(s);L.push({el:s,w:800,last:800})});
+ function fit(){L.forEach(function(l){l.el.style.width='';l.el.style.setProperty('--w',800);l.w=l.last=800});wm.style.fontSize='100px';var p=wm.parentNode,W=p.clientWidth-parseFloat(getComputedStyle(p).paddingLeft)*2,sw=wm.offsetWidth;wm.style.fontSize=Math.floor(100*W/Math.max(sw,1))+'px';L.forEach(function(l){l.el.style.width=l.el.getBoundingClientRect().width+'px'})}
+ var tm;fit();document.fonts&&document.fonts.ready.then(fit);addEventListener('resize',function(){clearTimeout(tm);tm=setTimeout(fit,150)});
+ var px=-1e4,py=-1e4,vis=false;if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[0].isIntersecting}).observe(wm);
+ addEventListener('pointermove',function(e){px=e.clientX;py=e.clientY},{passive:true});
+ gsap.ticker.add(function(time){if(!vis||hidden)return;var rr=wm.getBoundingClientRect(),near=py>rr.top-100&&py<rr.bottom+100,rad=rr.width/9;
+  L.forEach(function(l,i){var r=l.el.getBoundingClientRect(),c=r.left+r.width/2,idle=800-120*(.5+.5*Math.sin(time*1.5-i*.6)),d=px-c,k=near?Math.exp(-(d*d)/(2*rad*rad)):0,tg=Math.min(idle,800-540*k);
+   l.w+=(tg-l.w)*.12;if(Math.abs(l.w-l.last)>.7){l.last=l.w;l.el.style.setProperty('--w',l.w.toFixed(0))}})})
+})();
+document.fonts&&document.fonts.ready.then(function(){ScrollTrigger.refresh()});addEventListener('load',function(){ScrollTrigger.refresh()});
+})();
+</script>
+</body>
+</html>
